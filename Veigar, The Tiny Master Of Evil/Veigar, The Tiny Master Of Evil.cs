@@ -444,7 +444,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     {
                         if (!enemy.IsDead)
                         {
-                            Drawing.DrawText(enemy.HPBarPosition.X + 9, enemy.HPBarPosition.Y + 2, System.Drawing.Color.White, enemyDictionary1[enemy]);
+                            Drawing.DrawText(enemy.HPBarPosition.X + 9, enemy.HPBarPosition.Y + 25, System.Drawing.Color.White, enemyDictionary1[enemy]);
                         }
                     }
                 }
