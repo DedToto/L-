@@ -15,6 +15,11 @@ using Veigar__The_Tiny_Master_Of_Evil.Properties;
 
 namespace Veigar__The_Tiny_Master_Of_Evil
 {
+    //internal class QMinions
+    //{
+    //    public var DisplayName { set; get; }
+    //}
+
     class Program
     {
         public const string ChampionName = "Veigar";
@@ -24,6 +29,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         public static Obj_AI_Base _m = null;
         private static Obj_AI_Hero Player;
         private static Obj_AI_Hero Target = null;
+
 
         //Buffs
         public static List<NewBuff> buffList = new List<NewBuff>
@@ -237,6 +243,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             //Farm menu:
             menu.AddSubMenu(new Menu("Farm", "Farm"));
             menu.SubMenu("Farm").AddItem(new MenuItem("WAmount", "Min Minions To Land W").SetValue(new Slider(3, 1, 7)));
+            menu.SubMenu("Farm").AddItem(new MenuItem("dontfarm", "Disable Q farm when using any combos").SetValue(true));
             menu.SubMenu("Farm").AddItem(new MenuItem("SaveE", "Save Mana for E while Farming").SetValue(false));
 
             //Auto KS
@@ -257,7 +264,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.AddSubMenu(new Menu("Combo", "Combo"));
             menu.SubMenu("Combo").AddItem(new MenuItem("LockTargets", "Lock Targets with Left Click").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("DontEShields", "Dont use E in spell shields").SetValue(true));
-            menu.SubMenu("Combo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None" }, 2)));
+            menu.SubMenu("Combo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None" }, 0)));
             menu.SubMenu("Combo").AddSubMenu(new Menu("Dont use R,IGN,DFG if target has", "DontRIGN"));
             foreach (var buff in buffList)
                 menu.SubMenu("Combo").SubMenu("DontRIGN").AddItem(new MenuItem("dont" + buff.Name, buff.MenuName).SetValue(true));
@@ -324,13 +331,15 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 BuyItems();
             }
 
+            if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active)
+            {
+                if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("dontfarm").GetValue<bool>()) return;
+                _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < Player.GetSpellDamage(m, SpellSlot.Q) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 1.5)) > 0);
+                lastHit();
+            }
+
             if (!menu.Item("Combo").GetValue<KeyBind>().Active)
             {
-
-                if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active && !menu.Item("AllInActive").GetValue<KeyBind>().Active && !menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active && !menu.Item("HarassActive").GetValue<KeyBind>().Active)
-                {
-                    lastHit();
-                }
 
                 if (menu.Item("AutoKST").GetValue<KeyBind>().Active)
                 {
@@ -453,6 +462,13 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 }
             }
 
+            if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active)
+            {
+                var MinMar = menu.Item("MinionMarker").GetValue<Circle>();
+                if (_m != null)
+                    Utility.DrawCircle(_m.Position, 75, MinMar.Color);
+            }
+
             #region Indicators
             if (menu.Item("HUD").GetValue<bool>())
             {
@@ -475,29 +491,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     Drawing.DrawText(Drawing.Width * 0.67f, Drawing.Height * 0.86f, System.Drawing.Color.Yellow, "Combo : On");
                 else
                     Drawing.DrawText(Drawing.Width * 0.67f, Drawing.Height * 0.86f, System.Drawing.Color.DarkRed, "Combo : Off");
-            }
-            #endregion
-            #region Minion Marker
-            List<Obj_AI_Base> allMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range);
-            var MinMar = menu.Item("MinionMarker").GetValue<Circle>();
-            if (MinMar.Active)
-            {
-                if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active)
-                {
-                    foreach (Obj_AI_Base minion in allMinions)
-                    {
-                        if (minion.IsValidTarget() &&
-                            HealthPrediction.GetHealthPrediction(minion, (int)((minion.Distance(Player.Position) / 1500) * 1000 + .25f * 1000), 100) <
-                            Player.GetSpellDamage(minion, SpellSlot.Q))
-                        {
-                            _m = minion;
-                            if (_m.IsDead)
-                                _m = null;
-                            if (_m == minion)
-                                Utility.DrawCircle(minion.Position, 75, MinMar.Color);
-                        }
-                    }
-                }
             }
             #endregion
             #region Mana Status
@@ -973,21 +966,10 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         {
             if (!Orbwalking.CanMove(40)) return;
             if (menu.Item("SaveE").GetValue<bool>() && !HasMana(false, false, true, false) && Exists(false, false, true, false, false, false)) return;
-            List<Obj_AI_Base> allMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range);
-
             if (Q.IsReady())
             {
-                foreach (Obj_AI_Base minion in allMinions)
-                {
-                    if (minion.IsValidTarget() && !minion.IsDead && HealthPrediction.GetHealthPrediction(minion, (int)((minion.Distance(Player.Position) / 1500) * 1000 + .25f * 1000), 100) <= Player.GetSpellDamage(minion, SpellSlot.Q))
-                    {
-                        if (Q.IsReady())
-                        {
-                            Q.Cast(minion, Packets());
-                            return;
-                        }
-                    }
-                }
+                if (_m != null)
+                    Q.Cast(_m, Packets());
             }
         }
 
