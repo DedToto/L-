@@ -1,4 +1,4 @@
-#region
+﻿#region
 using System;
 using System.Collections;
 using System.Linq;
@@ -376,7 +376,10 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
             if (menu.Item("InfoTable").GetValue<KeyBind>().Active || menu.Item("OptimalCombo").GetValue<bool>())
             {
-                enemyDictionary1 = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).ToDictionary(enemy => enemy, enemy => GetBestCombo(enemy, "Comboing").Item1);
+                if (menu.Item("InfoTable").GetValue<KeyBind>().Active)
+                    enemyDictionary1 = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).ToDictionary(enemy => enemy, enemy => GetBestCombo(enemy, "Comboing").Item1);
+                else
+                    enemyDictionary1 = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget() && GetBestCombo(enemy, "Comboing").Item1 != "Unkillable").ToDictionary(enemy => enemy, enemy => GetBestCombo(enemy, "Comboing").Item1);
             }
             #endregion
         }
