@@ -250,7 +250,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
             //Harass menu:
             menu.AddSubMenu(new Menu("Harass", "Harass"));
-            menu.SubMenu("Harass").AddItem(new MenuItem("HarassMode", "Choose Harass Type").SetValue(new StringList(new[] { "E+W+Q", "E+W", "Q" }, 0)));
+            menu.SubMenu("Harass").AddItem(new MenuItem("HarassMode", "Choose Harass Type").SetValue(new StringList(new[] { "E+W+Q", "E+W", "Q", "None" }, 0)));
             menu.SubMenu("Harass").AddItem(new MenuItem("WaitW", "Cast W before Q").SetValue(false));
 
             //Combo menu:
