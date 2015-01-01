@@ -350,6 +350,8 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
             Target = GetTarget();
 
+            var point = Player.ServerPosition + 300 * (Game.CursorPos.To2D() - Player.ServerPosition.To2D()).Normalized().To3D();
+
             //check if player is dead
             if (Player.IsDead) return;
 
@@ -368,14 +370,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 BuyItems();
             }
 
-            if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active)
-            {
-                if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("dontfarm").GetValue<bool>()) return;
-                _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < Player.GetSpellDamage(m, SpellSlot.Q) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 1.5)) > 0);
-                lastHit();
-                if (!menu.Item("ToMove").GetValue<bool>()) return; else Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
-            }
-
             if (!menu.Item("Combo").GetValue<KeyBind>().Active)
             {
 
@@ -386,33 +380,41 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
                 if (menu.Item("HarassActive").GetValue<KeyBind>().Active)
                 {
-                    if (!menu.Item("ToOrb").GetValue<bool>()) return; else if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
                     Harass();
+                    if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
                 }
 
                 if (menu.Item("LastHitWW").GetValue<KeyBind>().Active)
                 {
                     lastHitW();
-                    if (!menu.Item("ToMove").GetValue<bool>()) return; else Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
+                    if (menu.Item("ToMove").GetValue<bool>()) if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
                 }
 
                 if (menu.Item("AllInActive").GetValue<KeyBind>().Active)
                 {
-                    if (!menu.Item("ToOrb").GetValue<bool>()) return; else if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
                     AllIn();
+                    if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
                 }
 
                 if (menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active)
                 {
                     if (E.IsReady())
                         castE(GetNearestEnemy(Player));
-                    if (!menu.Item("ToMove").GetValue<bool>()) return; else Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
+                    if (menu.Item("ToMove").GetValue<bool>()) if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
                 }
             }
             else
             {
-                if (!menu.Item("ToOrb").GetValue<bool>()) return; else if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
                 Combo();
+                if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
+            }
+
+            if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active)
+            {
+                if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("dontfarm").GetValue<bool>()) return;
+                _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < Player.GetSpellDamage(m, SpellSlot.Q) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 1.5)) > 0);
+                lastHit();
+                if (!menu.Item("ToMove").GetValue<bool>()) return; else if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
             }
 
             if (menu.Item("manaStatus").GetValue<bool>())
