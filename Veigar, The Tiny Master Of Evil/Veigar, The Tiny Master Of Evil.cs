@@ -257,7 +257,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.AddSubMenu(new Menu("Combo", "Combo"));
             menu.SubMenu("Combo").AddItem(new MenuItem("LockTargets", "Lock Targets with Left Click").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("DontEShields", "Dont use E in spell shields").SetValue(true));
-            menu.SubMenu("Combo").AddItem(new MenuItem("Harassifnk", "Harass with Q if not killable").SetValue(false));
+            menu.SubMenu("Combo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None" }, 2)));
             menu.SubMenu("Combo").AddSubMenu(new Menu("Dont use R,IGN,DFG if target has", "DontRIGN"));
             foreach (var buff in buffList)
                 menu.SubMenu("Combo").SubMenu("DontRIGN").AddItem(new MenuItem("dont" + buff.Name, buff.MenuName).SetValue(true));
@@ -275,7 +275,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Game.PrintChat("Veigar, The Tiny Master Of Evil Loaded! Made by DedToto");
         }
-        
+
         public static bool IsImmune(Obj_AI_Hero target)
         {
             foreach (var buff in IgnoreList)
@@ -658,10 +658,12 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 else if (TheCombo == "IGN" && HasMana(false, false, false, false)) //IGN
                     UseSpells(Target, "N", false, false, false, false, false, true);
                 else if (TheCombo == "Unkillable" && HasMana(false, false, false, false)) //Unkillable
-                    if (menu.Item("Harassifnk").GetValue<bool>())
+                    if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 2)
+                        return;
+                    else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 0)
+                        Harass();
+                    else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 1)
                         UseSpells(Target, "N", true, false, false, false, false, false);
-                    else
-                        UseSpells(Target, "N", false, false, false, false, false, false);
             }
         }
 
