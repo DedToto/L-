@@ -1,4 +1,4 @@
-﻿#region
+#region
 using System;
 using System.Collections;
 using System.Linq;
@@ -444,7 +444,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     {
                         if (!enemy.IsDead)
                         {
-                            Drawing.DrawText(enemy.HPBarPosition.X + 9, enemy.HPBarPosition.Y + 5, System.Drawing.Color.White, enemyDictionary1[enemy]);
+                            Drawing.DrawText(enemy.HPBarPosition.X + 7, enemy.HPBarPosition.Y + 40, System.Drawing.Color.White, enemyDictionary1[enemy]);
                         }
                     }
                 }
