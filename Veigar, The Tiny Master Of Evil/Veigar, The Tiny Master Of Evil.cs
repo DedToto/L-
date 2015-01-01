@@ -280,6 +280,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Farm").AddItem(new MenuItem("WAmount", "Min Minions To Land W").SetValue(new Slider(3, 1, 7)));
             menu.SubMenu("Farm").AddItem(new MenuItem("dontfarm", "Disable Q farm when using any combos").SetValue(true));
             menu.SubMenu("Farm").AddItem(new MenuItem("SaveE", "Save Mana for E while Farming").SetValue(false));
+            menu.SubMenu("Farm").AddItem(new MenuItem("FarmMove", "Move To mouse").SetValue(new StringList(new[] { "Never", "Lane Clear", "Q farm", "Lane Clear & Q farm" }, 0)));
 
             //Auto KS
             menu.AddSubMenu(new Menu("Auto KS", "AutoKS"));
@@ -300,7 +301,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Combo").AddItem(new MenuItem("LockTargets", "Lock Targets with Left Click").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("DontEShields", "Dont use E in spell shields").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("ToOrb", "OrbWalk when using any combat functions").SetValue(true));
-            menu.SubMenu("Combo").AddItem(new MenuItem("ToMove", "Move To Mouse when using any non-combat functions").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None" }, 2)));
             menu.SubMenu("Combo").AddSubMenu(new Menu("Dont use R,IGN,DFG if target has", "DontRIGN"));
             foreach (var buff in buffList)
@@ -387,7 +387,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 if (menu.Item("LastHitWW").GetValue<KeyBind>().Active)
                 {
                     lastHitW();
-                    if (menu.Item("ToMove").GetValue<bool>()) if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
+                    if (menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 1 || menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 3) if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
                 }
 
                 if (menu.Item("AllInActive").GetValue<KeyBind>().Active)
@@ -398,9 +398,11 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
                 if (menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active)
                 {
+                    if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
                     if (E.IsReady())
+                    {
                         castE(GetNearestEnemy(Player));
-                    if (menu.Item("ToMove").GetValue<bool>()) if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
+                    }
                 }
             }
             else
@@ -414,7 +416,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("dontfarm").GetValue<bool>()) return;
                 _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < Player.GetSpellDamage(m, SpellSlot.Q) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 1.5)) > 0);
                 lastHit();
-                if (!menu.Item("ToMove").GetValue<bool>()) return; else if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
+                if (menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 2 || menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 3) if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
             }
 
             if (menu.Item("manaStatus").GetValue<bool>())
