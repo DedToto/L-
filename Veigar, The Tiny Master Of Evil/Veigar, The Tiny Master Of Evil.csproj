@@ -36,17 +36,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="LeagueSharp">
-      <HintPath>D:\Downloads\MOBA\L#\LeagueSharp\\System\LeagueSharp.dll</HintPath>
+      <HintPath>..\..\..\..\MISC\MOBA\LeagueSharp\System\LeagueSharp.dll</HintPath>
     </Reference>
     <Reference Include="LeagueSharp.Common">
-      <HintPath>D:\Downloads\MOBA\L#\LeagueSharp\\System\LeagueSharp.Common.dll</HintPath>
+      <HintPath>..\..\..\..\MISC\MOBA\LeagueSharp\System\LeagueSharp.Common.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX">
-      <HintPath>D:\Downloads\MOBA\L#\LeagueSharp\\System\SharpDX.dll</HintPath>
+      <HintPath>..\..\..\..\MISC\MOBA\LeagueSharp\System\SharpDX.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX.Direct3D9, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\Downloads\MOBA\L#\LeagueSharp\\System\SharpDX.Direct3D9.dll</HintPath>
+    <Reference Include="SharpDX.Direct3D9">
+      <HintPath>..\..\..\..\MISC\MOBA\LeagueSharp\System\SharpDX.Direct3D9.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -56,8 +55,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="xSLx-Orbwalker">
-      <HintPath>D:\Downloads\MOBA\L#\LeagueSharp\\System\xSLx-Orbwalker.dll</HintPath>
+    <Reference Include="xSLx-Orbwalker, Version=1.0.0.6, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\MISC\MOBA\LeagueSharp\System\xSLx-Orbwalker.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
