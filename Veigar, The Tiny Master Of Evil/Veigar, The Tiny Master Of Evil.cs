@@ -15,11 +15,6 @@ using Veigar__The_Tiny_Master_Of_Evil.Properties;
 
 namespace Veigar__The_Tiny_Master_Of_Evil
 {
-    //internal class QMinions
-    //{
-    //    public var DisplayName { set; get; }
-    //}
-
     class Program
     {
         public const string ChampionName = "Veigar";
@@ -29,7 +24,40 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         public static Obj_AI_Base _m = null;
         private static Obj_AI_Hero Player;
         private static Obj_AI_Hero Target = null;
+        public static int Orb = 0;
 
+        //HUD
+        public static List<HUD> HUDlist = new List<HUD>
+        {
+            new HUD()
+            {
+                DisplayTextON = "Combo : On", DisplayTextOFF = "Combo : Off", MenuText = "Display Combo Status", MenuComboText = "Combo"
+            },
+            new HUD()
+            {
+                DisplayTextON = "Harass : On", DisplayTextOFF = "Harass : Off", MenuText = "Display Harass Status", MenuComboText = "HarassActive"
+            },
+            new HUD()
+            {
+                DisplayTextON = "UseAll : On", DisplayTextOFF = "UseAll : Off", MenuText = "Display Use All Status", MenuComboText = "AllInActive"
+            },
+            new HUD()
+            {
+                DisplayTextON = "Q LastHit : On", DisplayTextOFF = "Q LastHit : Off", MenuText = "Display Q farm Status", MenuComboText = "LastHitQQ"
+            },
+            new HUD()
+            {
+                DisplayTextON = "AutoKS : On", DisplayTextOFF = "AutoKS : Off", MenuText = "Display KS Status", MenuComboText = "AutoKST"
+            },
+            new HUD()
+            {
+                DisplayTextON = "StunClosest : On", DisplayTextOFF = "StunClosest : Off", MenuText = "Display Stun Closest Status", MenuComboText = "Stun Closest Enemy"
+            },
+            new HUD()
+            {
+                DisplayTextON = "LaneClearW : On", DisplayTextOFF = "LaneClearW : Off", MenuText = "Display LaneClear Status", MenuComboText = "LastHitWW"
+            },
+        };
 
         //Buffs
         public static List<NewBuff> buffList = new List<NewBuff>
@@ -217,6 +245,14 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
             //Drawings menu:
             menu.AddSubMenu(new Menu("Drawings", "Drawings"));
+            menu.SubMenu("Drawings").SubMenu("HUD Settings").AddItem(new MenuItem("HUDdisplay", "Heads-up Display").SetValue(true));
+            menu.SubMenu("Drawings").SubMenu("HUD Settings").AddItem(new MenuItem("HUDX", "X axis").SetValue(new Slider(67, 0, 100)));
+            menu.SubMenu("Drawings").SubMenu("HUD Settings").AddItem(new MenuItem("HUDY", "Y axis").SetValue(new Slider(86, 0, 100)));
+            foreach (var hud in HUDlist.Where(hud => hud.MenuText != "Display KS Status" && hud.MenuText != "Display Stun Closest Status" && hud.MenuText != "Display LaneClear Status"))
+                menu.SubMenu("Drawings").SubMenu("HUD Settings").AddItem(new MenuItem("U" + hud.MenuText, hud.MenuText).SetValue(true));
+            foreach (var hud in HUDlist.Where(hud => hud.MenuText == "Display KS Status" || hud.MenuText == "Display Stun Closest Status" || hud.MenuText == "Display LaneClear Status"))
+                menu.SubMenu("Drawings").SubMenu("HUD Settings").AddItem(new MenuItem("U" + hud.MenuText, hud.MenuText).SetValue(false));
+
             menu.SubMenu("Drawings").AddItem(new MenuItem("QRange", "Q,R range").SetValue(new Circle(true, Color.FromArgb(255, 0, 255, 0))));
             menu.SubMenu("Drawings").AddItem(new MenuItem("WRange", "W range").SetValue(new Circle(false, Color.FromArgb(100, 255, 0, 255))));
             menu.SubMenu("Drawings").AddItem(new MenuItem("ERange", "E range").SetValue(new Circle(true, Color.FromArgb(255, 255, 0, 255))));
@@ -224,7 +260,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Drawings").AddItem(new MenuItem("TText", "Mark Targets with Circles").SetValue(true));
             menu.SubMenu("Drawings").AddItem(new MenuItem("LText", "Display Locked Target[HP BAR]").SetValue(true));
             menu.SubMenu("Drawings").AddItem(new MenuItem("manaStatus", "Mana status").SetValue(true));
-            menu.SubMenu("Drawings").AddItem(new MenuItem("HUD", "Heads-up Display").SetValue(true));
             menu.SubMenu("Drawings").AddItem(new MenuItem("ExtraNeeded", "Show Extra/Needed Damage").SetValue(true));
             menu.SubMenu("Drawings").AddItem(new MenuItem("OptimalCombo", "Show Best Kill Combo[FPS]").SetValue(false));
 
@@ -264,7 +299,9 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.AddSubMenu(new Menu("Combo", "Combo"));
             menu.SubMenu("Combo").AddItem(new MenuItem("LockTargets", "Lock Targets with Left Click").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("DontEShields", "Dont use E in spell shields").SetValue(true));
-            menu.SubMenu("Combo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None" }, 0)));
+            menu.SubMenu("Combo").AddItem(new MenuItem("ToOrb", "OrbWalk when using any combat functions").SetValue(true));
+            menu.SubMenu("Combo").AddItem(new MenuItem("ToMove", "Move To Mouse when using any non-combat functions").SetValue(true));
+            menu.SubMenu("Combo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None" }, 2)));
             menu.SubMenu("Combo").AddSubMenu(new Menu("Dont use R,IGN,DFG if target has", "DontRIGN"));
             foreach (var buff in buffList)
                 menu.SubMenu("Combo").SubMenu("DontRIGN").AddItem(new MenuItem("dont" + buff.Name, buff.MenuName).SetValue(true));
@@ -336,6 +373,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("dontfarm").GetValue<bool>()) return;
                 _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < Player.GetSpellDamage(m, SpellSlot.Q) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 1.5)) > 0);
                 lastHit();
+                if (!menu.Item("ToMove").GetValue<bool>()) return; else Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
             }
 
             if (!menu.Item("Combo").GetValue<KeyBind>().Active)
@@ -348,16 +386,19 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
                 if (menu.Item("HarassActive").GetValue<KeyBind>().Active)
                 {
+                    if (!menu.Item("ToOrb").GetValue<bool>()) return; else if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
                     Harass();
                 }
 
                 if (menu.Item("LastHitWW").GetValue<KeyBind>().Active)
                 {
                     lastHitW();
+                    if (!menu.Item("ToMove").GetValue<bool>()) return; else Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
                 }
 
                 if (menu.Item("AllInActive").GetValue<KeyBind>().Active)
                 {
+                    if (!menu.Item("ToOrb").GetValue<bool>()) return; else if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
                     AllIn();
                 }
 
@@ -365,10 +406,12 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 {
                     if (E.IsReady())
                         castE(GetNearestEnemy(Player));
+                    if (!menu.Item("ToMove").GetValue<bool>()) return; else Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
                 }
             }
             else
             {
+                if (!menu.Item("ToOrb").GetValue<bool>()) return; else if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
                 Combo();
             }
 
@@ -470,27 +513,32 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             }
 
             #region Indicators
-            if (menu.Item("HUD").GetValue<bool>())
+            if (menu.Item("HUDdisplay").GetValue<bool>())
             {
-                if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active)
-                    Drawing.DrawText(Drawing.Width * 0.67f, Drawing.Height * 0.92f, System.Drawing.Color.Yellow, "Q LastHit : On");
-                else
-                    Drawing.DrawText(Drawing.Width * 0.67f, Drawing.Height * 0.92f, System.Drawing.Color.DarkRed, "Q LastHit : Off");
+                //float X = (float)menu.Item("HUDX").GetValue<Slider>().Value / 100;
+                //float Y = (float)menu.Item("HUDY").GetValue<Slider>().Value / 100;
+                //float K = 0.86f;
+                //foreach (var hud in HUDlist)
+                //{
+                //    //if (menu.Item(hud.MenuComboText).GetValue<KeyBind>().Active)
+                //    //    Drawing.DrawText(Drawing.Width * X, Drawing.Height * Y, System.Drawing.Color.Yellow, hud.DisplayTextON);
+                //    //else
+                //    //    Drawing.DrawText(Drawing.Width * X, Drawing.Height * Y, System.Drawing.Color.DarkRed, hud.DisplayTextOFF);
+                //    //Y = Y + 2f;
+                //    Drawing.DrawText(Drawing.Width * 0.67f, Drawing.Height * K, System.Drawing.Color.LightGreen, "Number");
+                //    K = K + 0.02f;
+                //}
 
-                if (menu.Item("AllInActive").GetValue<KeyBind>().Active)
-                    Drawing.DrawText(Drawing.Width * 0.67f, Drawing.Height * 0.90f, System.Drawing.Color.Yellow, "Use All Spells : On");
-                else
-                    Drawing.DrawText(Drawing.Width * 0.67f, Drawing.Height * 0.90f, System.Drawing.Color.DarkRed, "Use All Spells : Off");
-
-                if (menu.Item("HarassActive").GetValue<KeyBind>().Active)
-                    Drawing.DrawText(Drawing.Width * 0.67f, Drawing.Height * 0.88f, System.Drawing.Color.Yellow, "Harass : On");
-                else
-                    Drawing.DrawText(Drawing.Width * 0.67f, Drawing.Height * 0.88f, System.Drawing.Color.DarkRed, "Harass : Off");
-
-                if (menu.Item("Combo").GetValue<KeyBind>().Active)
-                    Drawing.DrawText(Drawing.Width * 0.67f, Drawing.Height * 0.86f, System.Drawing.Color.Yellow, "Combo : On");
-                else
-                    Drawing.DrawText(Drawing.Width * 0.67f, Drawing.Height * 0.86f, System.Drawing.Color.DarkRed, "Combo : Off");
+                float X = (float)menu.Item("HUDX").GetValue<Slider>().Value / 100;
+                float Y = (float)menu.Item("HUDY").GetValue<Slider>().Value / 100;
+                foreach (var hud in HUDlist.Where(hud => "U" + hud.MenuText == menu.Item("U" + hud.MenuText).Name && menu.Item("U" + hud.MenuText).GetValue<bool>()))
+                {
+                    if (menu.Item(hud.MenuComboText).GetValue<KeyBind>().Active)
+                        Drawing.DrawText(Drawing.Width * X, Drawing.Height * Y, System.Drawing.Color.Yellow, hud.DisplayTextON);
+                    else
+                        Drawing.DrawText(Drawing.Width * X, Drawing.Height * Y, System.Drawing.Color.DarkRed, hud.DisplayTextOFF);
+                    Y = Y + 0.02f;
+                }
             }
             #endregion
             #region Mana Status
@@ -1340,11 +1388,13 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             if (mode)
             {
                 Orbwalker = new Orbwalking.Orbwalker(orbwalkerMenu);
+                Orb = 1;
                 Game.PrintChat("Regular Orbwalker Loaded");
             }
             else
             {
                 xSLxOrbwalker.AddToMenu(orbwalkerMenu);
+                Orb = 2;
                 Game.PrintChat("xSLx Orbwalker Loaded");
             }
         }
