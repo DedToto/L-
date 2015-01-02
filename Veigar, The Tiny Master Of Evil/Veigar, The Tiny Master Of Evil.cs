@@ -244,6 +244,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Keys").AddItem(new MenuItem("Stun Closest Enemy", "Stun Closest Enemy").SetValue(new KeyBind("A".ToCharArray()[0], KeyBindType.Press, false)));
             menu.SubMenu("Keys").AddItem(new MenuItem("LastHitQQ", "Last hit with Q").SetValue(new KeyBind("J".ToCharArray()[0], KeyBindType.Toggle)));
             menu.SubMenu("Keys").AddItem(new MenuItem("LastHitWW", "Lane Clear with W").SetValue(new KeyBind("K".ToCharArray()[0], KeyBindType.Press, false)));
+            menu.SubMenu("Keys").AddItem(new MenuItem("JungleActive", "Jungle Farm").SetValue(new KeyBind("H".ToCharArray()[0], KeyBindType.Press, false)));
             menu.SubMenu("Keys").AddItem(new MenuItem("InfoTable", "Show Info Table[FPS]").SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Toggle)));
 
             //Drawings menu:
@@ -286,6 +287,13 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Farm").AddItem(new MenuItem("OnlySiege", "Last hit only siege creeps").SetValue(false));
             menu.SubMenu("Farm").AddItem(new MenuItem("WAmount", "Min Minions To Land W").SetValue(new Slider(3, 1, 7)));
             menu.SubMenu("Farm").AddItem(new MenuItem("FarmMove", "Move To mouse").SetValue(new StringList(new[] { "Never", "Lane Clear", "Q farm", "Lane Clear & Q farm" }, 0)));
+
+            //Jungle Farm menu:
+            menu.AddSubMenu(new Menu("Jungle Farm", "Jungle Clear"));
+            menu.SubMenu("Jungle Clear").AddItem(new MenuItem("UseAAJungle", "Use AA").SetValue(true));
+            menu.SubMenu("Jungle Clear").AddItem(new MenuItem("UseQJungle", "Use Q").SetValue(true));
+            menu.SubMenu("Jungle Clear").AddItem(new MenuItem("UseWJungle", "Use W").SetValue(true));
+            menu.SubMenu("Jungle Clear").AddItem(new MenuItem("UseEJungle", "Use E").SetValue(true));
 
             //Auto KS
             menu.AddSubMenu(new Menu("Auto KS", "AutoKS"));
@@ -360,21 +368,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 NeededCD = manaCheck().Item2;
             }
 
-            if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active)
-            {
-                if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("dontfarm").GetValue<bool>()) return;
-                if (menu.Item("OnlySiege").GetValue<bool>())
-                {
-                    _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.BaseSkinName.Contains("Siege") && m.Health < ((Player.GetSpellDamage(m, SpellSlot.Q) - 20)) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
-                }
-                else
-                {
-                    _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < ((Player.GetSpellDamage(m, SpellSlot.Q) - 20)) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
-                }
-                lastHit();
-                if (menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 2 || menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 3) if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
-            }
-
             if (menu.Item("ExtraNeeded").GetValue<bool>())
             {
                 enemyDictionary = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).ToDictionary(enemy => enemy, enemy => GetExtraNeeded(enemy).Item1);
@@ -391,6 +384,11 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 if (menu.Item("AutoKST").GetValue<KeyBind>().Active)
                 {
                     AutoKS();
+                }
+
+                if (menu.Item("JungleActive").GetValue<KeyBind>().Active)
+                {
+                    JungleFarm();
                 }
 
                 if (menu.Item("HarassActive").GetValue<KeyBind>().Active)
@@ -424,6 +422,21 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             {
                 Combo();
                 if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
+            }
+
+            if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active)
+            {
+                if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("dontfarm").GetValue<bool>()) return;
+                if (menu.Item("OnlySiege").GetValue<bool>())
+                {
+                    _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.BaseSkinName.Contains("Siege") && m.Health < ((Player.GetSpellDamage(m, SpellSlot.Q) - 20)) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
+                }
+                else
+                {
+                    _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < ((Player.GetSpellDamage(m, SpellSlot.Q) - 20)) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
+                }
+                lastHit();
+                if (menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 2 || menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 3) if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
             }
 
             if (menu.Item("Wimm").GetValue<bool>())
@@ -956,6 +969,54 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
         }
 
+        //Jungle Farm
+        public static void JungleFarm()
+        {
+            if (menu.Item("UseAAJungle").GetValue<bool>() && E.IsReady())
+            {
+                var AAminion = MinionManager.GetMinions(525, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth).FirstOrDefault();
+                if (AAminion != null)
+                {
+                    Player.IssueOrder(GameObjectOrder.AttackUnit, AAminion);
+                }
+            }
+
+            if (menu.Item("UseEJungle").GetValue<bool>() && E.IsReady())
+            {
+                var minion = MinionManager.GetMinions(E.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth).FirstOrDefault();
+                if (minion != null)
+                    castE(minion);
+            }
+
+            if (menu.Item("UseQJungle").GetValue<bool>() && Q.IsReady())
+            {
+                var targetClear = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth).FirstOrDefault();
+                var targetFarm = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < (Player.GetSpellDamage(m, SpellSlot.Q)));
+
+                if (targetFarm != null)
+                {
+                    Q.Cast(targetFarm, Packets());
+                }
+                else if (targetClear != null)
+                {
+                    Q.Cast(targetClear, Packets());
+                }
+            }
+
+            if (menu.Item("UseWJungle").GetValue<bool>() && W.IsReady())
+            {
+                var JungleWMinions = MinionManager.GetMinions(Player.Position, W.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
+                List<Vector2> minionerinos2 =
+         (from minions in JungleWMinions select minions.Position.To2D()).ToList();
+                var ePos2 = MinionManager.GetBestCircularFarmLocation(minionerinos2, W.Width, W.Range).Position;
+
+                if (ePos2.Distance(Player.Position.To2D()) < W.Range && MinionManager.GetBestCircularFarmLocation(minionerinos2, W.Width, W.Range).MinionsHit > 0)
+                {
+                    W.Cast(ePos2, Packets());
+                }
+            }
+        }
+
         //Q last Hitting
         public static void lastHit()
         {
@@ -1320,6 +1381,19 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 }
             }
             return false;
+        }
+
+        //E CAST(UNIT)
+        public static void castE(Obj_AI_Base target)
+        {
+            PredictionOutput pred = Prediction.GetPrediction(target, E.Delay);
+            Vector2 castVec = pred.UnitPosition.To2D() -
+                              Vector2.Normalize(pred.UnitPosition.To2D() - Player.Position.To2D()) * E.Width;
+
+            if (pred.Hitchance >= HitChance.High && E.IsReady())
+            {
+                E.Cast(castVec);
+            }
         }
 
         //E CAST(UNIT)
