@@ -281,6 +281,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.AddSubMenu(new Menu("Farm", "Farm"));
             menu.SubMenu("Farm").AddItem(new MenuItem("dontfarm", "Disable Q farm when using any combos").SetValue(true));
             menu.SubMenu("Farm").AddItem(new MenuItem("SaveE", "Save Mana for E while Farming").SetValue(false));
+            menu.SubMenu("Farm").AddItem(new MenuItem("OnlySiege", "Last hit only siege creeps").SetValue(false));
             menu.SubMenu("Farm").AddItem(new MenuItem("WAmount", "Min Minions To Land W").SetValue(new Slider(3, 1, 7)));
             menu.SubMenu("Farm").AddItem(new MenuItem("FarmMove", "Move To mouse").SetValue(new StringList(new[] { "Never", "Lane Clear", "Q farm", "Lane Clear & Q farm" }, 0)));
 
@@ -359,7 +360,14 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active)
             {
                 if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("dontfarm").GetValue<bool>()) return;
-                _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < ((Player.GetSpellDamage(m, SpellSlot.Q) - 20)) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
+                if (menu.Item("OnlySiege").GetValue<bool>())
+                {
+                    _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.BaseSkinName.Contains("Siege") && m.Health < ((Player.GetSpellDamage(m, SpellSlot.Q) - 20)) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
+                }
+                else
+                {
+                    _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < ((Player.GetSpellDamage(m, SpellSlot.Q) - 20)) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
+                }
                 lastHit();
                 if (menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 2 || menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 3) if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
             }
@@ -491,9 +499,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 var MinMar = menu.Item("MinionMarker").GetValue<Circle>();
                 if (_m != null)
                     Utility.DrawCircle(_m.Position, 75, MinMar.Color);
-                Drawing.DrawText(_m.HPBarPosition.X + 7, _m.HPBarPosition.Y + 40, System.Drawing.Color.White, "Base:" + _m.BaseSkinName);
-                Drawing.DrawText(_m.HPBarPosition.X + 7, _m.HPBarPosition.Y + 60, System.Drawing.Color.White, "Name:" + _m.Name);
-                Drawing.DrawText(_m.HPBarPosition.X + 7, _m.HPBarPosition.Y + 80, System.Drawing.Color.White, "Skin:" + _m.SkinName);
             }
 
             #region Indicators
