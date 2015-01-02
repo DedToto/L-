@@ -35,6 +35,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="keMinimap">
+      <HintPath>..\..\..\..\MISC\MOBA\LeagueSharp\System\keMinimap.dll</HintPath>
+    </Reference>
     <Reference Include="LeagueSharp">
       <HintPath>..\..\..\..\MISC\MOBA\LeagueSharp\System\LeagueSharp.dll</HintPath>
     </Reference>

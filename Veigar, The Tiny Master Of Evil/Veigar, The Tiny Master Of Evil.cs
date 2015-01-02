@@ -11,6 +11,7 @@ using LeagueSharp.Common;
 using SharpDX;
 using xSLx_Orbwalker;
 using Veigar__The_Tiny_Master_Of_Evil.Properties;
+using KeMinimap;
 #endregion
 
 namespace Veigar__The_Tiny_Master_Of_Evil
@@ -1293,7 +1294,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             {
                 foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != Player.Team))
                 {
-                    if (SharpDX.Vector2.Distance(Game.CursorPos.To2D(), enemy.ServerPosition.To2D()) < 200)
+                    if (SharpDX.Vector2.Distance(Game.CursorPos.To2D(), enemy.ServerPosition.To2D()) < 200 && !KeMinimap.Minimap.MouseOver)
                     {
                         if (enemy.IsValidTarget())
                         {
