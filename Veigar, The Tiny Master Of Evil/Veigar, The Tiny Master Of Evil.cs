@@ -26,6 +26,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         private static Obj_AI_Hero Player;
         private static Obj_AI_Hero Target = null;
         public static int Orb = 0;
+        public static int ComboStarted = 0;
 
         //HUD
         public static List<HUD> HUDlist = new List<HUD>
@@ -163,7 +164,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         public static int[] rMana = { 0, 125, 175, 225 };
 
         public static int ManaMode = 0;
-        public static double NeededCD = 0d;
+        public static int NeededCD = 0;
 
         //Orbwalker instance
         private static Orbwalking.Orbwalker Orbwalker;
@@ -278,9 +279,9 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
             //Farm menu:
             menu.AddSubMenu(new Menu("Farm", "Farm"));
-            menu.SubMenu("Farm").AddItem(new MenuItem("WAmount", "Min Minions To Land W").SetValue(new Slider(3, 1, 7)));
             menu.SubMenu("Farm").AddItem(new MenuItem("dontfarm", "Disable Q farm when using any combos").SetValue(true));
             menu.SubMenu("Farm").AddItem(new MenuItem("SaveE", "Save Mana for E while Farming").SetValue(false));
+            menu.SubMenu("Farm").AddItem(new MenuItem("WAmount", "Min Minions To Land W").SetValue(new Slider(3, 1, 7)));
             menu.SubMenu("Farm").AddItem(new MenuItem("FarmMove", "Move To mouse").SetValue(new StringList(new[] { "Never", "Lane Clear", "Q farm", "Lane Clear & Q farm" }, 0)));
 
             //Auto KS
@@ -301,7 +302,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.AddSubMenu(new Menu("Combo", "Combo"));
             menu.SubMenu("Combo").AddItem(new MenuItem("LockTargets", "Lock Targets with Left Click").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("DontEShields", "Dont use E in spell shields").SetValue(true));
-            menu.SubMenu("Combo").AddItem(new MenuItem("ToOrb", "OrbWalk when using any combat functions").SetValue(true));
+            menu.SubMenu("Combo").AddItem(new MenuItem("ToOrb", "OrbWalk when using any combat functions").SetValue(false));
             menu.SubMenu("Combo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None" }, 2)));
             menu.SubMenu("Combo").AddSubMenu(new Menu("Dont use R,IGN,DFG if target has", "DontRIGN"));
             foreach (var buff in buffList)
@@ -319,28 +320,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPosibleToInterrupt;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Game.PrintChat("Veigar, The Tiny Master Of Evil Loaded! Made by DedToto");
-        }
-
-        public static bool IsImmune(Obj_AI_Hero target)
-        {
-            foreach (var buff in IgnoreList)
-            {
-                if (target.HasBuff(buff.DisplayName) || target.HasBuff(buff.Name)) return true;
-            }
-            return false;
-        }
-
-        public static bool HasBuffs(Obj_AI_Hero target)
-        {
-            foreach (var buff in buffList)
-            {
-                if (target.HasBuff(buff.DisplayName) || target.HasBuff(buff.Name))
-                {
-                    if (menu.Item("dont" + buff.Name).GetValue<bool>())
-                        return true;
-                }
-            }
-            return false;
         }
 
         private static void Game_OnGameUpdate(EventArgs args)
@@ -369,6 +348,30 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             if (menu.Item("buystart").GetValue<KeyBind>().Active)
             {
                 BuyItems();
+            }
+
+            if (menu.Item("manaStatus").GetValue<bool>())
+            {
+                ManaMode = manaCheck().Item1;
+                NeededCD = manaCheck().Item2;
+            }
+
+            if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active)
+            {
+                if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("dontfarm").GetValue<bool>()) return;
+                _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < ((Player.GetSpellDamage(m, SpellSlot.Q) - 20)) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
+                lastHit();
+                if (menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 2 || menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 3) if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
+            }
+
+            if (menu.Item("ExtraNeeded").GetValue<bool>())
+            {
+                enemyDictionary = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).ToDictionary(enemy => enemy, enemy => GetExtraNeeded(enemy).Item1);
+            }
+
+            if (menu.Item("InfoTable").GetValue<KeyBind>().Active || menu.Item("OptimalCombo").GetValue<bool>())
+            {
+                enemyDictionary1 = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).ToDictionary(enemy => enemy, enemy => GetBestCombo(enemy, "Comboing"));
             }
 
             if (!menu.Item("Combo").GetValue<KeyBind>().Active)
@@ -410,33 +413,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             {
                 Combo();
                 if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
-            }
-
-            if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active)
-            {
-                if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("dontfarm").GetValue<bool>()) return;
-                _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < Player.GetSpellDamage(m, SpellSlot.Q) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 1.5)) > 0);
-                lastHit();
-                if (menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 2 || menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 3) if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
-            }
-
-            if (menu.Item("manaStatus").GetValue<bool>())
-            {
-                ManaMode = manaCheck().Item1;
-                NeededCD = manaCheck().Item2;
-            }
-
-            if (menu.Item("ExtraNeeded").GetValue<bool>())
-            {
-                enemyDictionary = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).ToDictionary(enemy => enemy, enemy => GetExtraNeeded(enemy).Item1);
-            }
-
-            if (menu.Item("InfoTable").GetValue<KeyBind>().Active || menu.Item("OptimalCombo").GetValue<bool>())
-            {
-                if (menu.Item("InfoTable").GetValue<KeyBind>().Active)
-                    enemyDictionary1 = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).ToDictionary(enemy => enemy, enemy => GetBestCombo(enemy, "Comboing").Item1);
-                else
-                    enemyDictionary1 = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget() && GetBestCombo(enemy, "Comboing").Item1 != "Unkillable").ToDictionary(enemy => enemy, enemy => GetBestCombo(enemy, "Comboing").Item1);
             }
             #endregion
         }
@@ -515,25 +491,14 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 var MinMar = menu.Item("MinionMarker").GetValue<Circle>();
                 if (_m != null)
                     Utility.DrawCircle(_m.Position, 75, MinMar.Color);
+                Drawing.DrawText(_m.HPBarPosition.X + 7, _m.HPBarPosition.Y + 40, System.Drawing.Color.White, "Base:" + _m.BaseSkinName);
+                Drawing.DrawText(_m.HPBarPosition.X + 7, _m.HPBarPosition.Y + 60, System.Drawing.Color.White, "Name:" + _m.Name);
+                Drawing.DrawText(_m.HPBarPosition.X + 7, _m.HPBarPosition.Y + 80, System.Drawing.Color.White, "Skin:" + _m.SkinName);
             }
 
             #region Indicators
             if (menu.Item("HUDdisplay").GetValue<bool>())
             {
-                //float X = (float)menu.Item("HUDX").GetValue<Slider>().Value / 100;
-                //float Y = (float)menu.Item("HUDY").GetValue<Slider>().Value / 100;
-                //float K = 0.86f;
-                //foreach (var hud in HUDlist)
-                //{
-                //    //if (menu.Item(hud.MenuComboText).GetValue<KeyBind>().Active)
-                //    //    Drawing.DrawText(Drawing.Width * X, Drawing.Height * Y, System.Drawing.Color.Yellow, hud.DisplayTextON);
-                //    //else
-                //    //    Drawing.DrawText(Drawing.Width * X, Drawing.Height * Y, System.Drawing.Color.DarkRed, hud.DisplayTextOFF);
-                //    //Y = Y + 2f;
-                //    Drawing.DrawText(Drawing.Width * 0.67f, Drawing.Height * K, System.Drawing.Color.LightGreen, "Number");
-                //    K = K + 0.02f;
-                //}
-
                 float X = (float)menu.Item("HUDX").GetValue<Slider>().Value / 100;
                 float Y = (float)menu.Item("HUDY").GetValue<Slider>().Value / 100;
                 foreach (var hud in HUDlist.Where(hud => "U" + hud.MenuText == menu.Item("U" + hud.MenuText).Name && menu.Item("U" + hud.MenuText).GetValue<bool>()))
@@ -568,7 +533,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             if (menu.Item("InfoTable").GetValue<KeyBind>().Active)
             {
                 var x = Drawing.Width * 0.85f;
-                var y = Drawing.Height * 0.62f;
+                var y = Drawing.Height * 0.61f;
                 Drawing.DrawText(x, y - 20f, System.Drawing.Color.White, "~INFO TABLE~");
                 //Applies the function to all enemy heroes
                 foreach (Obj_AI_Hero enemy in enemyDictionary1.Keys)
@@ -601,8 +566,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         {
             foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != Player.Team && Player.Distance(enemy.Position) <= NeededRange(menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseRKS").GetValue<bool>(), menu.Item("UseDFGKS").GetValue<bool>(), menu.Item("UseIGNKS").GetValue<bool>())))
             {
-                //if (ChoosedTarget != null && enemy != ChoosedTarget) return;
-                double damage = 0d;
+                float damage = 0f;
                 string LocalSource = null;
                 if (menu.Item("UseWKS").GetValue<bool>()) LocalSource = "NE"; else LocalSource = "N";
                 damage = GetComboDamage(enemy, LocalSource, menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseRKS").GetValue<bool>(), menu.Item("UseDFGKS").GetValue<bool>(), menu.Item("UseIGNKS").GetValue<bool>());
@@ -655,7 +619,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         {
             if (Player.Distance(Target.Position) <= E.Range)
             {
-                string TheCombo = GetBestCombo(Target, "Comboing").Item1;
+                string TheCombo = GetBestCombo(Target, "Comboing");
 
                 if (TheCombo == "Q" && HasMana(true, false, false, false)) //Q
                     UseSpells(Target, "N", true, false, false, false, false, false);
@@ -813,194 +777,150 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         }
 
         //The Main function that decides which combo to use and what is the needed cooldown
-        private static Tuple<string, double> GetBestCombo(Obj_AI_Hero x, string Source)
+        private static string GetBestCombo(Obj_AI_Hero x, string Source)
         {
             string BestCombo = null;
-            double NeededCooldown = 0d;
-
-            if (GetComboDamage(x, Source, true, false, false, false, false, false) > x.Health && Exists(true, false, false, false, false, false)) //Q
+            float Break = 0f;
+            if (Environment.TickCount - ComboStarted > Break && BestCombo != "Unkillable")
             {
-                if (!UpCD(true, false, false, false, false, false))
+                if (GetComboDamage(x, Source, true, false, false, false, false, false) > x.Health) //Q
                 {
-                    NeededCooldown = UpCDD(true, false, false, false, false, false);
+                    BestCombo = "Q";
+                    Break = CastTime(x, true, false, false, false, false, false);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "Q";
-            }
-            else if (GetComboDamage(x, Source, false, true, true, false, false, false) > x.Health && Exists(false, true, true, false, false, false)) //E+W
-            {
-                if (!UpCD(false, true, true, false, false, false))
+                else if (GetComboDamage(x, Source, false, true, true, false, false, false) > x.Health) //E+W
                 {
-                    NeededCooldown = UpCDD(false, true, true, false, false, false);
+                    BestCombo = "E+W";
+                    Break = CastTime(x, false, true, true, false, false, false);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "E+W";
-            }
-            else if (GetComboDamage(x, Source, true, true, true, false, false, false) > x.Health && Exists(true, true, true, false, false, false)) //E+W+Q
-            {
-                if (!UpCD(true, true, true, false, false, false))
+                else if (GetComboDamage(x, Source, true, true, true, false, false, false) > x.Health) //E+W+Q
                 {
-                    NeededCooldown = UpCDD(true, true, true, false, false, false);
+                    BestCombo = "E+W+Q";
+                    Break = CastTime(x, true, true, true, false, false, false);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "E+W+Q";
-            }
-            else if (GetComboDamage(x, Source, true, true, true, false, true, false) > x.Health && Exists(true, true, true, false, true, false)) //DFG+E+W+Q
-            {
-                if (!UpCD(true, true, true, false, true, false))
+                else if (GetComboDamage(x, Source, true, true, true, false, true, false) > x.Health) //DFG+E+W+Q
                 {
-                    NeededCooldown = UpCDD(true, true, true, false, true, false);
+                    BestCombo = "|DFG|E+W+Q";
+                    Break = CastTime(x, true, true, true, false, true, false);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "|DFG|E+W+Q";
-            }
-            else if (GetComboDamage(x, Source, false, true, true, false, true, false) > x.Health && Exists(false, true, true, false, true, false)) //DFG+E+W
-            {
-                if (!UpCD(false, true, true, false, true, false))
+                else if (GetComboDamage(x, Source, false, true, true, false, true, false) > x.Health) //DFG+E+W
                 {
-                    NeededCooldown = UpCDD(false, true, true, false, true, false);
+                    BestCombo = "|DFG|E+W";
+                    Break = CastTime(x, false, true, true, false, true, false);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "|DFG|E+W";
-            }
-            else if (GetComboDamage(x, Source, true, false, false, false, true, false) > x.Health && Exists(true, false, false, false, true, false)) //DFG+Q
-            {
-                if (!UpCD(true, false, false, false, true, false))
+                else if (GetComboDamage(x, Source, true, false, false, false, true, false) > x.Health) //DFG+Q
                 {
-                    NeededCooldown = UpCDD(true, false, false, false, true, false);
+                    BestCombo = "|DFG|Q";
+                    Break = CastTime(x, true, false, false, false, true, false);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "|DFG|Q";
-            }
-            else if (GetComboDamage(x, Source, false, true, true, true, false, false) > x.Health && Exists(false, true, true, true, false, false)) //E+W+R
-            {
-                if (!UpCD(false, true, true, true, false, false))
+                else if (GetComboDamage(x, Source, false, true, true, true, false, false) > x.Health) //E+W+R
                 {
-                    NeededCooldown = UpCDD(false, true, true, true, false, false);
+                    BestCombo = "E+W+R";
+                    Break = CastTime(x, false, true, true, true, false, false);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "E+W+R";
-            }
-            else if (GetComboDamage(x, Source, true, true, true, true, false, false) > x.Health && Exists(true, true, true, true, false, false)) //E+W+R+Q
-            {
-                if (!UpCD(true, true, true, true, false, false))
+                else if (GetComboDamage(x, Source, true, true, true, true, false, false) > x.Health) //E+W+R+Q
                 {
-                    NeededCooldown = UpCDD(true, true, true, true, false, false);
+                    BestCombo = "E+W+R+Q";
+                    Break = CastTime(x, true, true, true, true, false, false);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "E+W+R+Q";
-            }
-            else if (GetComboDamage(x, Source, false, false, true, true, false, false) > x.Health && Exists(false, false, true, true, false, false)) //E+R
-            {
-                if (!UpCD(false, false, true, true, false, false))
+                else if (GetComboDamage(x, Source, false, false, true, true, false, false) > x.Health) //E+R
                 {
-                    NeededCooldown = UpCDD(false, false, true, true, false, false);
+                    BestCombo = "E+R";
+                    Break = CastTime(x, false, false, true, true, false, false);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "E+R";
-            }
-            else if (GetComboDamage(x, Source, false, false, false, true, false, false) > x.Health && Exists(false, false, false, true, false, false)) //R
-            {
-                if (!UpCD(false, false, false, true, false, false))
+                else if (GetComboDamage(x, Source, false, false, false, true, false, false) > x.Health) //R
                 {
-                    NeededCooldown = UpCDD(false, false, false, true, false, false);
+                    BestCombo = "R";
+                    Break = CastTime(x, false, false, false, true, false, false);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "R";
-            }
-            else if (GetComboDamage(x, Source, true, false, true, true, true, false) > x.Health && Exists(true, false, true, true, true, false)) //DFG+E+R+Q
-            {
-                if (!UpCD(true, false, true, true, true, false))
+                else if (GetComboDamage(x, Source, true, false, true, true, true, false) > x.Health) //DFG+E+R+Q
                 {
-                    NeededCooldown = UpCDD(true, false, true, true, true, false);
+                    BestCombo = "|DFG|E+R+Q";
+                    Break = CastTime(x, true, false, true, true, true, false);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "|DFG|E+R+Q";
-            }
-            else if (GetComboDamage(x, Source, false, true, true, true, true, false) > x.Health && Exists(false, true, true, true, true, false)) //DFG+E+W+R
-            {
-                if (!UpCD(false, true, true, true, true, false))
+                else if (GetComboDamage(x, Source, false, true, true, true, true, false) > x.Health) //DFG+E+W+R
                 {
-                    NeededCooldown = UpCDD(false, true, true, true, true, false);
+                    BestCombo = "|DFG|E+W+R";
+                    Break = CastTime(x, false, true, true, true, true, false);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "|DFG|E+W+R";
-            }
-            else if (GetComboDamage(x, Source, true, true, true, true, true, false) > x.Health && Exists(true, true, true, true, true, false)) //DFG+E+W+R+Q
-            {
-                if (!UpCD(true, true, true, true, true, false))
+                else if (GetComboDamage(x, Source, true, true, true, true, true, false) > x.Health) //DFG+E+W+R+Q
                 {
-                    NeededCooldown = UpCDD(true, true, true, true, true, false);
+                    BestCombo = "|DFG|E+W+R+Q";
+                    Break = CastTime(x, true, true, true, true, true, false);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "|DFG|E+W+R+Q";
-            }
-            else if (GetComboDamage(x, Source, false, false, false, true, true, false) > x.Health && Exists(false, false, false, true, true, false)) //DFG+R
-            {
-                if (!UpCD(false, false, false, true, true, false))
+                else if (GetComboDamage(x, Source, false, false, false, true, true, false) > x.Health) //DFG+R
                 {
-                    NeededCooldown = UpCDD(false, false, false, true, true, false);
+                    BestCombo = "|DFG|R";
+                    Break = CastTime(x, false, false, false, true, true, false);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "|DFG|R";
-            }
-            else if (GetComboDamage(x, Source, true, false, true, false, false, true) > x.Health && Exists(true, false, true, false, false, true)) //E+Q+IGN
-            {
-                if (!UpCD(true, false, true, false, false, true))
+                else if (GetComboDamage(x, Source, true, false, true, false, false, true) > x.Health) //E+Q+IGN
                 {
-                    NeededCooldown = UpCDD(true, false, true, false, false, true);
+                    BestCombo = "E+Q+IGN";
+                    Break = CastTime(x, true, false, true, false, false, true);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "E+Q+IGN";
-            }
-            else if (GetComboDamage(x, Source, false, true, true, false, false, true) > x.Health && Exists(false, true, true, false, false, true)) //E+W+IGN
-            {
-                if (!UpCD(false, true, true, false, false, true))
+                else if (GetComboDamage(x, Source, false, true, true, false, false, true) > x.Health) //E+W+IGN
                 {
-                    NeededCooldown = UpCDD(false, true, true, false, false, true);
+                    BestCombo = "E+W+IGN";
+                    Break = CastTime(x, false, true, true, false, false, true);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "E+W+IGN";
-            }
-            else if (GetComboDamage(x, Source, true, true, true, false, false, true) > x.Health && Exists(true, true, true, false, false, true)) //E+W+Q+IGN
-            {
-                if (!UpCD(true, true, true, false, false, true))
+                else if (GetComboDamage(x, Source, true, true, true, false, false, true) > x.Health) //E+W+Q+IGN
                 {
-                    NeededCooldown = UpCDD(true, true, true, false, false, true);
+                    BestCombo = "E+W+Q+IGN";
+                    Break = CastTime(x, true, true, true, false, false, true);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "E+W+Q+IGN";
-            }
-            else if (GetComboDamage(x, Source, true, true, true, true, false, true) > x.Health && Exists(true, true, true, true, false, true)) //E+W+R+Q+IGN
-            {
-                if (!UpCD(true, true, true, true, false, true))
+                else if (GetComboDamage(x, Source, true, true, true, true, false, true) > x.Health) //E+W+R+Q+IGN
                 {
-                    NeededCooldown = UpCDD(true, true, true, true, false, true);
+                    BestCombo = "E+W+R+Q+IGN";
+                    Break = CastTime(x, true, true, true, true, false, true);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "E+W+R+Q+IGN";
-            }
-            else if (GetComboDamage(x, Source, true, false, true, false, true, true) > x.Health && Exists(true, false, true, false, true, true)) //DFG+E+Q+IGN
-            {
-                if (!UpCD(true, false, true, false, true, true))
+                else if (GetComboDamage(x, Source, true, false, true, false, true, true) > x.Health) //DFG+E+Q+IGN
                 {
-                    NeededCooldown = UpCDD(true, false, true, false, true, true);
+                    BestCombo = "|DFG|E+Q+IGN";
+                    Break = CastTime(x, true, false, true, false, true, true);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "|DFG|E+Q+IGN";
-            }
-            else if (GetComboDamage(x, Source, false, true, true, false, true, true) > x.Health && Exists(false, true, true, false, true, true)) //DFG+E+W+IGN
-            {
-                if (!UpCD(false, true, true, false, true, true))
+                else if (GetComboDamage(x, Source, false, true, true, false, true, true) > x.Health) //DFG+E+W+IGN
                 {
-                    NeededCooldown = UpCDD(false, true, true, false, true, true);
+                    BestCombo = "|DFG|E+W+IGN";
+                    Break = CastTime(x, false, true, true, false, true, true);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "|DFG|E+W+IGN";
-            }
-            else if (GetComboDamage(x, Source, true, true, true, false, true, true) > x.Health && Exists(true, true, true, false, true, true)) //DFG+E+W+Q+IGN
-            {
-                if (!UpCD(true, true, true, false, true, true))
+                else if (GetComboDamage(x, Source, true, true, true, false, true, true) > x.Health) //DFG+E+W+Q+IGN
                 {
-                    NeededCooldown = UpCDD(true, true, true, false, true, true);
+                    BestCombo = "|DFG|E+W+Q+IGN";
+                    Break = CastTime(x, true, true, true, false, true, true);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "|DFG|E+W+Q+IGN";
-            }
-            else if (GetComboDamage(x, Source, true, true, true, true, true, true) > x.Health && Exists(true, true, true, true, true, true)) //DFG+E+W+R+Q+IGN
-            {
-                if (!UpCD(true, true, true, true, true, true))
+                else if (GetComboDamage(x, Source, true, true, true, true, true, true) > x.Health) //DFG+E+W+R+Q+IGN
                 {
-                    NeededCooldown = UpCDD(true, true, true, true, true, true);
+                    BestCombo = "|DFG|E+W+R+Q+IGN";
+                    Break = CastTime(x, true, true, true, true, true, true);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "|DFG|E+W+R+Q+IGN";
-            }
-            else if (GetComboDamage(x, Source, false, false, false, false, false, true) > x.Health && Exists(false, false, false, false, false, true))  //IGN
-            {
-                if (!UpCD(false, false, false, false, false, true))
+                else if (GetComboDamage(x, Source, false, false, false, false, false, true) > x.Health)  //IGN
                 {
-                    NeededCooldown = UpCDD(false, false, false, false, false, true);
+                    BestCombo = "IGN";
+                    Break = CastTime(x, false, false, false, false, false, true);
+                    ComboStarted = Environment.TickCount;
                 }
-                BestCombo = "IGN";
             }
             if (BestCombo == null) //Not Killable
             {
@@ -1010,7 +930,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             if (!x.IsVisible)
                 BestCombo = "N/A";
 
-            return Tuple.Create(BestCombo, NeededCooldown);
+            return BestCombo;
 
         }
 
@@ -1043,58 +963,58 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         //Calculates the damage from selected abilities
         private static float GetComboDamage(Obj_AI_Base enemy, string source, bool A, bool B, bool C, bool D, bool EE, bool F)
         {
-            double damage = 0d;
+            float damage = 0f;
             if (source == "Draw")
             {
                 if (EE)
-                    damage += Player.GetItemDamage(enemy, Damage.DamageItems.Dfg) / 1.2;
+                    damage += (float)(Player.GetItemDamage(enemy, Damage.DamageItems.Dfg) / 1.2);
 
                 if (A)
-                    damage += Player.GetSpellDamage(enemy, SpellSlot.Q);
+                    damage += (float)(Player.GetSpellDamage(enemy, SpellSlot.Q));
 
                 if (D)
-                    damage += Player.GetSpellDamage(enemy, SpellSlot.R);
+                    damage += (float)(Player.GetSpellDamage(enemy, SpellSlot.R));
 
                 if (B)
-                    damage += Player.GetSpellDamage(enemy, SpellSlot.W);
+                    damage += (float)(Player.GetSpellDamage(enemy, SpellSlot.W));
 
                 if (EE)
-                    damage = damage * 1.2;
+                    damage = (float)(damage * 1.2);
 
                 if (IgniteSlot != SpellSlot.Unknown && F)
-                    damage += ObjectManager.Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite);
+                    damage += (float)(ObjectManager.Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite));
             }
             else
             {
                 if (Dfg.IsReady() && EE)
-                    damage += Player.GetItemDamage(enemy, Damage.DamageItems.Dfg) / 1.2;
+                    damage += (float)(Player.GetItemDamage(enemy, Damage.DamageItems.Dfg) / 1.2);
 
                 if (Q.IsReady() && A)
-                    damage += Player.GetSpellDamage(enemy, SpellSlot.Q);
+                    damage += (float)(Player.GetSpellDamage(enemy, SpellSlot.Q));
 
                 if (R.IsReady() && D)
-                    damage += Player.GetSpellDamage(enemy, SpellSlot.R);
+                    damage += (float)(Player.GetSpellDamage(enemy, SpellSlot.R));
 
                 if (W.IsReady() && B)
-                    damage += Player.GetSpellDamage(enemy, SpellSlot.W);
+                    damage += (float)(Player.GetSpellDamage(enemy, SpellSlot.W));
 
                 if (Dfg.IsReady() && EE)
-                    damage = damage * 1.2;
+                    damage = (float)(damage * 1.2);
 
                 if (IgniteSlot != SpellSlot.Unknown && Player.Spellbook.CanUseSpell(IgniteSlot) == SpellState.Ready && F)
-                    damage += ObjectManager.Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite);
+                    damage += (float)(ObjectManager.Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite));
             }
 
-            if (Items.HasItem(3155, (Obj_AI_Hero)enemy))
-            {
-                damage = damage - 250;
-            }
+            //if (Items.HasItem(3155, (Obj_AI_Hero)enemy))
+            //{
+            //    damage = damage - 250;
+            //}
 
-            if (Items.HasItem(3156, (Obj_AI_Hero)enemy))
-            {
-                damage = damage - 400;
-            }
-            return (float)damage;
+            //if (Items.HasItem(3156, (Obj_AI_Hero)enemy))
+            //{
+            //    damage = damage - 400;
+            //}
+            return damage - 20;
         }
 
         //Checks if you have enough mana for casting selected abilities
@@ -1120,13 +1040,13 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         }
 
         //Returns the time in seconds needed to regen mana for Q,E+W+Q,E+W+Q+R combos.
-        public static Tuple<int, double> manaCheck()
+        public static Tuple<int, int> manaCheck()
         {
             int QMana = qMana[Q.Level];
             int EWQMana = qMana[Q.Level] + wMana[W.Level] + eMana[E.Level];
             int EWQRMana = qMana[Q.Level] + wMana[W.Level] + eMana[E.Level] + rMana[R.Level];
             int end = 0;
-            double EndValue = 0d;
+            int EndValue = 0;
 
             if (Player.Mana < QMana)
             {
@@ -1134,7 +1054,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 {
                     double ManaRegen = ObjectManager.Player.PARRegenRate;
                     double NeededMana = qMana[Q.Level] - Player.Mana;
-                    EndValue = Math.Round(NeededMana / ManaRegen);
+                    EndValue = (int)Math.Round(NeededMana / ManaRegen);
                     end = 1;
                 }
             }
@@ -1145,7 +1065,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 {
                     double ManaRegen = ObjectManager.Player.PARRegenRate;
                     double NeededMana = qMana[Q.Level] + wMana[W.Level] + eMana[E.Level] - Player.Mana;
-                    EndValue = Math.Round(NeededMana / ManaRegen);
+                    EndValue = (int)Math.Round(NeededMana / ManaRegen);
                     end = 2;
                 }
             }
@@ -1156,7 +1076,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 {
                     double ManaRegen = ObjectManager.Player.PARRegenRate;
                     double NeededMana = qMana[Q.Level] + wMana[W.Level] + eMana[E.Level] + rMana[R.Level] - Player.Mana;
-                    EndValue = Math.Round(NeededMana / ManaRegen);
+                    EndValue = (int)Math.Round(NeededMana / ManaRegen);
                     end = 3;
                 }
             }
@@ -1255,23 +1175,35 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             else return true;
         }
 
+        //Returns how much time will you spend on casting spells
+        public static float CastTime(Obj_AI_Base enemy, bool A, bool B, bool C, bool D, bool EEE, bool F)
+        {
+            float time = 0f;
+            if (A && Player.ServerPosition.Distance(enemy.Position) <= 650) time += 0.5f * 1000 + (Player.ServerPosition.Distance(enemy.Position) / 1500) * 1000; else time += 0.5f * 1000;
+            if (B) time += 1.2f * 1000;
+            if (C) time += 0.2f * 1000;
+            if (D && Player.ServerPosition.Distance(enemy.Position) <= 650) time += 0.5f * 1000 + (Player.ServerPosition.Distance(enemy.Position) / 1400) * 1000; else time += 0.5f * 1000;
+            //if (F) time += 3f * 1000;
+            return time;
+        }
+
         //Returns how much more damage you need to deal to the target to ensure the kill OR how much you will overdamage to them
         private static Tuple<int, string> GetExtraNeeded(Obj_AI_Hero target)
         {
             var combodamage = GetComboDamage(target, "calc", true, true, true, true, true, true);
-            double Damage = 0d;
+            float Damage = 0f;
             int OutPut = 0;
             string Text = null;
 
             if (combodamage > target.Health)
             {
-                Damage = Math.Round(combodamage - target.Health);
+                Damage = (float)Math.Round(combodamage - target.Health);
                 OutPut = (int)Damage;
                 Text = "Extra:";
             }
             else
             {
-                Damage = Math.Round(target.Health - combodamage);
+                Damage = (float)Math.Round(target.Health - combodamage);
                 OutPut = (int)Damage;
                 Text = "Need:";
             }
@@ -1342,6 +1274,30 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 Target = ChoosedTarget;
             }
             return Target;
+        }
+
+        //Checks if the target will be affected by spell
+        public static bool IsImmune(Obj_AI_Hero target)
+        {
+            foreach (var buff in IgnoreList)
+            {
+                if (target.HasBuff(buff.DisplayName) || target.HasBuff(buff.Name)) return true;
+            }
+            return false;
+        }
+
+        //Checks if the target will be killed by spell
+        public static bool HasBuffs(Obj_AI_Hero target)
+        {
+            foreach (var buff in buffList)
+            {
+                if (target.HasBuff(buff.DisplayName) || target.HasBuff(buff.Name))
+                {
+                    if (menu.Item("dont" + buff.Name).GetValue<bool>())
+                        return true;
+                }
+            }
+            return false;
         }
 
         //E CAST(UNIT)
