@@ -106,6 +106,10 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             {
                 MenuName = "Braum Shield", DisplayName = "braumeshieldbuff", Name = "BraumShieldRaise"
             },
+            new NewBuff()
+            {
+                MenuName = "Guardian Angel", DisplayName = "Guardian Angel", Name = "willrevive"
+            },
         };
 
         public static List<NewIgnore> IgnoreList = new List<NewIgnore>
@@ -317,7 +321,8 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Combo").AddItem(new MenuItem("DontEShields", "Dont use E in spell shields").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("DontWimm", "Don't Use W on CC'ed targets in range misc when comboing").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("ToOrb", "OrbWalk when using any combat functions").SetValue(false));
-            menu.SubMenu("Combo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None", "AA" }, 3)));
+            menu.SubMenu("Combo").AddItem(new MenuItem("CastMode", "E and W settings").SetValue(new StringList(new[] { "Use E before W", "Use W before E", }, 0)));
+            menu.SubMenu("Combo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None" }, 2)));
             menu.SubMenu("Combo").AddSubMenu(new Menu("Dont use R,IGN,DFG if target has", "DontRIGN"));
             foreach (var buff in buffList)
                 menu.SubMenu("Combo").SubMenu("DontRIGN").AddItem(new MenuItem("dont" + buff.Name, buff.MenuName).SetValue(true));
@@ -389,11 +394,11 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
                 if (menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active)
                 {
+                    if (Player.ServerPosition.Distance(Game.CursorPos) > 55 && !KeMinimap.Minimap.MouseOver) Player.IssueOrder(GameObjectOrder.MoveTo, point);
                     if (E.IsReady())
                     {
                         castE(GetNearestEnemy(Player));
                     }
-                    if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
                 }
             }
             else
@@ -447,7 +452,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 else
                 {
                     WimmTarget = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).FirstOrDefault(m => m.IsValidTarget(E.Range) && m.Buffs.Where(b => b.IsActive && Game.Time < b.EndTime && (b.Type == BuffType.Charm || b.Type == BuffType.Knockback || b.Type == BuffType.Stun || b.Type == BuffType.Suppression || b.Type == BuffType.Snare)).Aggregate(0f, (current, buff) => Math.Max(current, buff.EndTime)) - Game.Time >= W.Delay);
-                    if (WimmTarget != null)
+                    if (WimmTarget != null && !menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active)
                         W.Cast(WimmTarget);
                 }
             }
@@ -660,10 +665,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             else if (menu.Item("HarassMode").GetValue<StringList>().SelectedIndex == 2) UseSpells(Target, "QHarass", true, false, false, false, false, false);
 
             if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
-            if (Player.ServerPosition.Distance(Target.Position) <= 525)
-            {
-                Player.IssueOrder(GameObjectOrder.AttackUnit, Target);
-            }
         }
 
         //Use All Available Spells Combo(Independent of CD and target HP)
@@ -671,10 +672,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         {
             UseSpells(Target, "AllIn", true, true, true, true, true, true);
             if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
-            if (Player.ServerPosition.Distance(Target.Position) <= 525)
-            {
-                Player.IssueOrder(GameObjectOrder.AttackUnit, Target);
-            }
         }
 
         //The Main Smart Combo that chooses the most efficient combo that will ensure the kill
@@ -745,35 +742,69 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                         Harass();
                     else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 1)
                         UseSpells(Target, "N", true, false, false, false, false, false);
-                    else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 3 && Source != "KS")
-                        if (Target != null && Player.ServerPosition.Distance(Target.Position) <= 525)
-                        {
-                            Player.IssueOrder(GameObjectOrder.AttackUnit, Target);
-                        }
             }
         }
 
         //Uses selected abilities
         private static void UseSpells(Obj_AI_Hero T, string Source, bool QQ, bool WW, bool EE, bool RR, bool DFGG, bool IGNN)
         {
-            if (EE && T != null)
+            if (menu.Item("CastMode").GetValue<StringList>().SelectedIndex == 0)
             {
-                if (Player.Distance(T.Position) <= E.Range)
+                if (EE && T != null)
                 {
-                    if (E.IsReady() && !IsImmune(T) || !menu.Item("DontEShields").GetValue<bool>())
+                    if (Player.Distance(T.Position) <= E.Range)
                     {
-                        castE((Obj_AI_Hero)T);
+                        if (E.IsReady() && !IsImmune(T) || !menu.Item("DontEShields").GetValue<bool>())
+                        {
+                            castE((Obj_AI_Hero)T);
+                        }
+                    }
+                }
+
+                if (WW && T != null)
+                {
+                    if (W.IsReady())
+                    {
+                        var pred = W.GetPrediction(T);
+                        if (pred.Hitchance == HitChance.Immobile && W.IsReady())
+                            W.Cast(T.ServerPosition, Packets());
                     }
                 }
             }
-
-            if (WW && T != null)
+            else if (menu.Item("CastMode").GetValue<StringList>().SelectedIndex == 1)
             {
-                if (W.IsReady())
+                if (WW && T != null)
                 {
-                    var pred = W.GetPrediction(T);
-                    if (pred.Hitchance == HitChance.Immobile && W.IsReady())
-                        W.Cast(T.ServerPosition, Packets());
+                    if (W.IsReady())
+                    {
+                        var pred = W.GetPrediction(T);
+                        if (EE)
+                        {
+                            if (E.IsReady() && pred.Hitchance == HitChance.VeryHigh) W.Cast(T.ServerPosition, Packets());
+                        }
+                        else
+                        {
+                            if (pred.Hitchance == HitChance.VeryHigh) W.Cast(T.ServerPosition, Packets());
+                        }
+                    }
+                }
+
+                if (EE && T != null)
+                {
+                    if (Player.Distance(T.Position) <= E.Range)
+                    {
+                        if (E.IsReady() && !IsImmune(T) || !menu.Item("DontEShields").GetValue<bool>())
+                        {
+                            if (WW)
+                            {
+                                if (!W.IsReady()) castE((Obj_AI_Hero)T);
+                            }
+                            else
+                            {
+                                castE((Obj_AI_Hero)T);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -783,8 +814,16 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 {
                     if (Source == "NE")
                     {
-                        if (!W.IsReady())
-                            Items.UseItem(Dfg.Id, T);
+                        if (menu.Item("CastMode").GetValue<StringList>().SelectedIndex == 0)
+                        {
+                            if (!W.IsReady())
+                                Items.UseItem(Dfg.Id, T);
+                        }
+                        else
+                        {
+                            if (T.Buffs.Where(b => b.IsActive && Game.Time < b.EndTime && (b.Type == BuffType.Charm || b.Type == BuffType.Knockback || b.Type == BuffType.Stun || b.Type == BuffType.Suppression || b.Type == BuffType.Snare)).Aggregate(0f, (current, buff) => Math.Max(current, buff.EndTime)) - Game.Time >= W.Delay)
+                                Items.UseItem(Dfg.Id, T);
+                        }
                     }
                     else
                     {
@@ -800,8 +839,16 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 {
                     if (Source == "NE")
                     {
-                        if (!W.IsReady())
-                            R.CastOnUnit(T, Packets());
+                        if (menu.Item("CastMode").GetValue<StringList>().SelectedIndex == 0)
+                        {
+                            if (!W.IsReady())
+                                R.CastOnUnit(T, Packets());
+                        }
+                        else
+                        {
+                            if (T.Buffs.Where(b => b.IsActive && Game.Time < b.EndTime && (b.Type == BuffType.Charm || b.Type == BuffType.Knockback || b.Type == BuffType.Stun || b.Type == BuffType.Suppression || b.Type == BuffType.Snare)).Aggregate(0f, (current, buff) => Math.Max(current, buff.EndTime)) - Game.Time >= W.Delay)
+                                R.CastOnUnit(T, Packets());
+                        }
                     }
                     else
                     {
@@ -815,8 +862,16 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             {
                 if (Source == "NE")
                 {
-                    if (!W.IsReady())
-                        Q.CastOnUnit(T, Packets());
+                    if (menu.Item("CastMode").GetValue<StringList>().SelectedIndex == 0)
+                    {
+                        if (!W.IsReady())
+                            Q.CastOnUnit(T, Packets());
+                    }
+                    else
+                    {
+                        if (T.Buffs.Where(b => b.IsActive && Game.Time < b.EndTime && (b.Type == BuffType.Charm || b.Type == BuffType.Knockback || b.Type == BuffType.Stun || b.Type == BuffType.Suppression || b.Type == BuffType.Snare)).Aggregate(0f, (current, buff) => Math.Max(current, buff.EndTime)) - Game.Time >= W.Delay)
+                            Q.CastOnUnit(T, Packets());
+                    }
                 }
                 else if (Source != "EWQHarass" && Source != "QHarass")
                 {
@@ -841,8 +896,16 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 {
                     if (Source == "NE")
                     {
-                        if (!W.IsReady())
-                            Player.Spellbook.CastSpell(IgniteSlot, T);
+                        if (menu.Item("CastMode").GetValue<StringList>().SelectedIndex == 0)
+                        {
+                            if (!W.IsReady())
+                                Player.Spellbook.CastSpell(IgniteSlot, T);
+                        }
+                        else
+                        {
+                            if (T.Buffs.Where(b => b.IsActive && Game.Time < b.EndTime && (b.Type == BuffType.Charm || b.Type == BuffType.Knockback || b.Type == BuffType.Stun || b.Type == BuffType.Suppression || b.Type == BuffType.Snare)).Aggregate(0f, (current, buff) => Math.Max(current, buff.EndTime)) - Game.Time >= W.Delay)
+                                Player.Spellbook.CastSpell(IgniteSlot, T);
+                        }
                     }
                     else
                     {
@@ -1723,7 +1786,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
             if (pred.Hitchance >= HitChance.High && E.IsReady())
             {
-                E.Cast(castVec);
+                E.Cast(castVec, Packets());
             }
         }
 
@@ -1735,7 +1798,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
             if (E.IsReady())
             {
-                E.Cast(castVec);
+                E.Cast(castVec, Packets());
             }
         }
 
