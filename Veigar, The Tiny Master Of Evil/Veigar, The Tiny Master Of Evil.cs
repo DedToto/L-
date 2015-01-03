@@ -222,8 +222,8 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             IgniteSlot = Player.GetSpellSlot("SummonerDot");
             DFGSlot = Player.GetSpellSlot("Deathfire_Grasp");
 
-            Dfg = Utility.Map.GetMap()._MapType == Utility.Map.MapType.TwistedTreeline ||
-                  Utility.Map.GetMap()._MapType == Utility.Map.MapType.CrystalScar
+            Dfg = Utility.Map.GetMap().Type == Utility.Map.MapType.TwistedTreeline ||
+                  Utility.Map.GetMap().Type == Utility.Map.MapType.CrystalScar
                 ? new Items.Item(3188, 750)
                 : new Items.Item(3128, 750);
 
@@ -345,6 +345,12 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
+            //if (Target != null)
+            //{
+            //    //Drawing.DrawLine(Player.Position, Player.Position.Extend(Target.Position, 150),10f, System.Drawing.Color.LightGreen);
+            //    Drawing.DrawLine(Player.Position.To2D().X, Player.Position.To2D().Y, Player.Position.To2D().Extend(Target.Position.To2D(), 150f).X, Player.Position.To2D().Extend(Target.Position.To2D(), 150f).Y, 100f, System.Drawing.Color.LightGreen);
+
+            //}
 
             if (Delay != 0f)
             {
@@ -1393,8 +1399,19 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     damage += (float)(Player.GetSpellDamage(enemy, SpellSlot.R));
 
                 if (W.IsReady() && B)
-                    damage += (float)(Player.GetSpellDamage(enemy, SpellSlot.W));
-
+                {
+                    if (source == "Comboing" || source == "KS")
+                    {
+                        if (C)
+                        {
+                            if (E.IsReady()) damage += (float)(Player.GetSpellDamage(enemy, SpellSlot.W));
+                        }
+                        else
+                        {
+                            damage += (float)(Player.GetSpellDamage(enemy, SpellSlot.W));
+                        }
+                    }
+                }
                 if (Dfg.IsReady() && EE)
                     damage = (float)(damage * 1.2);
 
