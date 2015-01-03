@@ -708,7 +708,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     TheCombo = GetBestCombo(Target, "KS");
                 }
 
-                if (Ccombo == null)
+                if (Ccombo == null && TheCombo != "Unkillable")
                 {
                     Delay = CastTime(TheCombo);
                     Delay1 = Environment.TickCount;
@@ -761,13 +761,15 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     UseSpells(Target, "NE", true, true, true, true, true, true);
                 else if (TheCombo == Ccombo && TheCombo == "IGN" && HasMana(false, false, false, false)) //IGN
                     UseSpells(Target, "N", false, false, false, false, false, true);
-                else if (Ccombo == null && TheCombo == "Unkillable" && HasMana(false, false, false, false)) //Unkillable
+                if (Ccombo == null && TheCombo == "Unkillable" && HasMana(false, false, false, false)) //Unkillable
+                {
                     if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 2)
                         return;
                     else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 0)
                         Harass();
                     else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 1)
                         UseSpells(Target, "N", true, false, false, false, false, false);
+                }
             }
         }
 
