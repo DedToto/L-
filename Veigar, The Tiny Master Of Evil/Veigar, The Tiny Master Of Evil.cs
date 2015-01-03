@@ -486,7 +486,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             {
                 if (ChoosedTarget != null && menu.Item("LockTargets").GetValue<bool>())
                 {
-                    if (menu.Item("LText").GetValue<bool>()) Drawing.DrawText(Player.HPBarPosition.X + 55, Player.HPBarPosition.Y + 25, System.Drawing.Color.LightGreen, "Lock:" + ChoosedTarget.Name);
+                    if (menu.Item("LText").GetValue<bool>()) Drawing.DrawText(Player.HPBarPosition.X + 55, Player.HPBarPosition.Y + 25, System.Drawing.Color.LightGreen, "Lock:" + ChoosedTarget.ChampionName);
                     if (menu.Item("TText").GetValue<bool>()) Utility.DrawCircle(ChoosedTarget.Position, 75, Color.LightGreen);
                 }
                 else
