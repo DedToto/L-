@@ -1289,7 +1289,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         //Jungle Farm
         public static void JungleFarm()
         {
-            if (menu.Item("UseAAJungle").GetValue<bool>() && E.IsReady())
+            if (menu.Item("UseAAJungle").GetValue<bool>())
             {
                 var AAminion = MinionManager.GetMinions(525, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth).FirstOrDefault();
                 if (AAminion != null)
