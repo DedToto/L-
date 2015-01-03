@@ -273,7 +273,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Other").AddItem(new MenuItem("StunUnderTower", "Stun Enemies Attacked by Tower").SetValue(true));
             menu.SubMenu("Other").AddItem(new MenuItem("UseInt", "Use E to Interrupt").SetValue(true));
             menu.SubMenu("Other").AddItem(new MenuItem("UseGap", "Use E against GapClosers").SetValue(true));
-            menu.SubMenu("Other").AddItem(new MenuItem("Wimm", "Use W on CC'ed targets in range").SetValue(true));
+            menu.SubMenu("Other").AddItem(new MenuItem("Wimm", "Use W on CC'ed targets in range").SetValue(false));
             menu.SubMenu("Other").AddItem(new MenuItem("PotOnIGN", "Use HP Pot when ignited").SetValue(true));
             menu.SubMenu("Other").AddItem(new MenuItem("buystart", "Buy Starting Items").SetValue(new KeyBind("P".ToCharArray()[0], KeyBindType.Press, false)));
             menu.SubMenu("Other").AddItem(new MenuItem("Reset", "Remove Target Lock").SetValue(new KeyBind("L".ToCharArray()[0], KeyBindType.Press, false)));
@@ -317,7 +317,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Combo").AddItem(new MenuItem("DontEShields", "Dont use E in spell shields").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("DontWimm", "Don't Use W on CC'ed targets in range misc when comboing").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("ToOrb", "OrbWalk when using any combat functions").SetValue(false));
-            menu.SubMenu("Combo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None", "AA" }, 2)));
+            menu.SubMenu("Combo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None", "AA" }, 3)));
             menu.SubMenu("Combo").AddSubMenu(new Menu("Dont use R,IGN,DFG if target has", "DontRIGN"));
             foreach (var buff in buffList)
                 menu.SubMenu("Combo").SubMenu("DontRIGN").AddItem(new MenuItem("dont" + buff.Name, buff.MenuName).SetValue(true));
@@ -374,7 +374,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 if (menu.Item("HarassActive").GetValue<KeyBind>().Active)
                 {
                     Harass();
-                    if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
                 }
 
                 if (menu.Item("LastHitWW").GetValue<KeyBind>().Active)
@@ -386,16 +385,15 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 if (menu.Item("AllInActive").GetValue<KeyBind>().Active)
                 {
                     AllIn();
-                    if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
                 }
 
                 if (menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active)
                 {
-                    if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
                     if (E.IsReady())
                     {
                         castE(GetNearestEnemy(Player));
                     }
+                    if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
                 }
             }
             else
@@ -660,6 +658,8 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             if (menu.Item("HarassMode").GetValue<StringList>().SelectedIndex == 0) UseSpells(Target, "EWQHarass", true, true, true, false, false, false);
             else if (menu.Item("HarassMode").GetValue<StringList>().SelectedIndex == 1) UseSpells(Target, "EWHarass", false, true, true, false, false, false);
             else if (menu.Item("HarassMode").GetValue<StringList>().SelectedIndex == 2) UseSpells(Target, "QHarass", true, false, false, false, false, false);
+
+            if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
             if (Player.ServerPosition.Distance(Target.Position) <= 525)
             {
                 Player.IssueOrder(GameObjectOrder.AttackUnit, Target);
@@ -670,6 +670,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         private static void AllIn()
         {
             UseSpells(Target, "AllIn", true, true, true, true, true, true);
+            if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
             if (Player.ServerPosition.Distance(Target.Position) <= 525)
             {
                 Player.IssueOrder(GameObjectOrder.AttackUnit, Target);
