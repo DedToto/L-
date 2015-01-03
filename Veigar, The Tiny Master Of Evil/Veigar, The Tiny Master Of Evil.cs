@@ -302,6 +302,8 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("AutoKS").AddItem(new MenuItem("UseRKS", "Use R").SetValue(false));
             menu.SubMenu("AutoKS").AddItem(new MenuItem("UseDFGKS", "Use DFG").SetValue(false));
             menu.SubMenu("AutoKS").AddItem(new MenuItem("UseIGNKS", "Use IGN").SetValue(false));
+            menu.SubMenu("AutoKS").AddItem(new MenuItem("RangeKS", "KS only when in shortest needed spell range").SetValue(true));
+            menu.SubMenu("AutoKS").AddItem(new MenuItem("DisableKS", "Disable KS when using combos").SetValue(true));
             menu.SubMenu("AutoKS").AddItem(new MenuItem("AutoKST", "AutoKS (toggle)!").SetValue(new KeyBind("U".ToCharArray()[0], KeyBindType.Toggle, true)));
 
             //Harass menu:
@@ -315,7 +317,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Combo").AddItem(new MenuItem("DontEShields", "Dont use E in spell shields").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("DontWimm", "Don't Use W on CC'ed targets in range misc when comboing").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("ToOrb", "OrbWalk when using any combat functions").SetValue(false));
-            menu.SubMenu("Combo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None" }, 2)));
+            menu.SubMenu("Combo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None", "AA" }, 3)));
             menu.SubMenu("Combo").AddSubMenu(new Menu("Dont use R,IGN,DFG if target has", "DontRIGN"));
             foreach (var buff in buffList)
                 menu.SubMenu("Combo").SubMenu("DontRIGN").AddItem(new MenuItem("dont" + buff.Name, buff.MenuName).SetValue(true));
@@ -362,30 +364,8 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 BuyItems();
             }
 
-            if (menu.Item("manaStatus").GetValue<bool>())
-            {
-                ManaMode = manaCheck().Item1;
-                NeededCD = manaCheck().Item2;
-            }
-
-            if (menu.Item("ExtraNeeded").GetValue<bool>())
-            {
-                enemyDictionary = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).ToDictionary(enemy => enemy, enemy => GetExtraNeeded(enemy).Item1);
-            }
-
-            if (menu.Item("InfoTable").GetValue<KeyBind>().Active || menu.Item("OptimalCombo").GetValue<bool>())
-            {
-                enemyDictionary1 = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).ToDictionary(enemy => enemy, enemy => GetBestCombo(enemy, "Comboing"));
-            }
-
             if (!menu.Item("Combo").GetValue<KeyBind>().Active)
             {
-
-                if (menu.Item("AutoKST").GetValue<KeyBind>().Active)
-                {
-                    AutoKS();
-                }
-
                 if (menu.Item("JungleActive").GetValue<KeyBind>().Active)
                 {
                     JungleFarm();
@@ -420,8 +400,29 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             }
             else
             {
-                Combo();
-                if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
+                Combo("Combo");
+                //if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
+            }
+
+            if (menu.Item("AutoKST").GetValue<KeyBind>().Active)
+            {
+                AutoKS();
+            }
+
+            if (menu.Item("manaStatus").GetValue<bool>())
+            {
+                ManaMode = manaCheck().Item1;
+                NeededCD = manaCheck().Item2;
+            }
+
+            if (menu.Item("ExtraNeeded").GetValue<bool>())
+            {
+                enemyDictionary = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).ToDictionary(enemy => enemy, enemy => GetExtraNeeded(enemy).Item1);
+            }
+
+            if (menu.Item("InfoTable").GetValue<KeyBind>().Active || menu.Item("OptimalCombo").GetValue<bool>())
+            {
+                enemyDictionary1 = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).ToDictionary(enemy => enemy, enemy => GetBestCombo(enemy, "Table"));
             }
 
             if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active)
@@ -447,7 +448,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 }
                 else
                 {
-                    WimmTarget = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).FirstOrDefault(m => m.IsValidTarget(W.Range) && m.Buffs.Where(b => b.IsActive && Game.Time < b.EndTime && (b.Type == BuffType.Charm || b.Type == BuffType.Knockback || b.Type == BuffType.Stun || b.Type == BuffType.Suppression || b.Type == BuffType.Snare)).Aggregate(0f, (current, buff) => Math.Max(current, buff.EndTime)) - Game.Time >= W.Delay);
+                    WimmTarget = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).FirstOrDefault(m => m.IsValidTarget(E.Range) && m.Buffs.Where(b => b.IsActive && Game.Time < b.EndTime && (b.Type == BuffType.Charm || b.Type == BuffType.Knockback || b.Type == BuffType.Stun || b.Type == BuffType.Suppression || b.Type == BuffType.Snare)).Aggregate(0f, (current, buff) => Math.Max(current, buff.EndTime)) - Game.Time >= W.Delay);
                     if (WimmTarget != null)
                         W.Cast(WimmTarget);
                 }
@@ -575,10 +576,32 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 {
                     if (!enemy.IsDead)
                     {
-                        if (enemyDictionary1[enemy] == "Unkillable")
-                            Drawing.DrawText(x, y, System.Drawing.Color.White, enemy.ChampionName + ":" + enemyDictionary1[enemy] + "(" + GetExtraNeeded(enemy).Item1 + ")");
+                        float ENNdamage = 0f;
+                        if (GetExtraNeeded(enemy).Item1 >= 1000)
+                        {
+                            int Integer = GetExtraNeeded(enemy).Item1;
+                            float Floater = Integer;
+                            ENNdamage = (float)Math.Round((Floater / 1000), 1);
+                        }
                         else
-                            Drawing.DrawText(x, y, System.Drawing.Color.White, enemy.ChampionName + ":" + enemyDictionary1[enemy]);
+                        {
+                            ENNdamage = GetExtraNeeded(enemy).Item1;
+                        }
+                        if (enemyDictionary1[enemy] == "Unkillable")
+                        {
+                            if (GetExtraNeeded(enemy).Item1 >= 1000)
+                            {
+                                Drawing.DrawText(x, y, System.Drawing.Color.White, enemy.ChampionName + ":" + enemyDictionary1[enemy] + "(" + ENNdamage + "k+)");
+                            }
+                            else
+                            {
+                                Drawing.DrawText(x, y, System.Drawing.Color.White, enemy.ChampionName + ":" + enemyDictionary1[enemy] + "(" + GetExtraNeeded(enemy).Item1 + ")");
+                            }
+                        }
+                        else
+                        {
+                            Drawing.DrawText(x, y, System.Drawing.Color.White, enemy.ChampionName + ":" + enemyDictionary1[enemy] + "(" + GetExtraNeeded(enemy).Item1 + ")");
+                        }
                     }
                     else
                     {
@@ -599,14 +622,10 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         //Automatic Kill Steal
         private static void AutoKS()
         {
-            foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != Player.Team && Player.Distance(enemy.Position) <= NeededRange(menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseRKS").GetValue<bool>(), menu.Item("UseDFGKS").GetValue<bool>(), menu.Item("UseIGNKS").GetValue<bool>())))
+            if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("DisableKS").GetValue<bool>()) return;
+            if (Target != null && Player.Distance(Target.Position) <= NeededRange(menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseRKS").GetValue<bool>(), menu.Item("UseDFGKS").GetValue<bool>(), menu.Item("UseIGNKS").GetValue<bool>()) || !menu.Item("RangeKS").GetValue<bool>() && Player.Distance(Target.Position) <= E.Range)
             {
-                float damage = 0f;
-                string LocalSource = null;
-                if (menu.Item("UseWKS").GetValue<bool>()) LocalSource = "NE"; else LocalSource = "N";
-                damage = GetComboDamage(enemy, LocalSource, menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseRKS").GetValue<bool>(), menu.Item("UseDFGKS").GetValue<bool>(), menu.Item("UseIGNKS").GetValue<bool>());
-                if (damage > enemy.Health && HasMana(menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseRKS").GetValue<bool>()))
-                    UseSpells(enemy, LocalSource, menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseRKS").GetValue<bool>(), menu.Item("UseDFGKS").GetValue<bool>(), menu.Item("UseIGNKS").GetValue<bool>());
+                Combo("KS");
             }
         }
 
@@ -641,20 +660,36 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             if (menu.Item("HarassMode").GetValue<StringList>().SelectedIndex == 0) UseSpells(Target, "EWQHarass", true, true, true, false, false, false);
             else if (menu.Item("HarassMode").GetValue<StringList>().SelectedIndex == 1) UseSpells(Target, "EWHarass", false, true, true, false, false, false);
             else if (menu.Item("HarassMode").GetValue<StringList>().SelectedIndex == 2) UseSpells(Target, "QHarass", true, false, false, false, false, false);
+            if (Player.ServerPosition.Distance(Target.Position) <= 525)
+            {
+                Player.IssueOrder(GameObjectOrder.AttackUnit, Target);
+            }
         }
 
         //Use All Available Spells Combo(Independent of CD and target HP)
         private static void AllIn()
         {
             UseSpells(Target, "AllIn", true, true, true, true, true, true);
+            if (Player.ServerPosition.Distance(Target.Position) <= 525)
+            {
+                Player.IssueOrder(GameObjectOrder.AttackUnit, Target);
+            }
         }
 
         //The Main Smart Combo that chooses the most efficient combo that will ensure the kill
-        private static void Combo()
+        private static void Combo(string Source)
         {
-            if (Player.Distance(Target.Position) <= E.Range)
+            if (Target != null && Player.Distance(Target.Position) <= E.Range || Source == "KS")
             {
-                string TheCombo = GetBestCombo(Target, "Comboing");
+                string TheCombo = null;
+                if (Source == "Combo")
+                {
+                    TheCombo = GetBestCombo(Target, "Comboing");
+                }
+                else
+                {
+                    TheCombo = GetBestCombo(Target, "KS");
+                }
 
                 if (TheCombo == "Q" && HasMana(true, false, false, false)) //Q
                     UseSpells(Target, "N", true, false, false, false, false, false);
@@ -709,6 +744,11 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                         Harass();
                     else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 1)
                         UseSpells(Target, "N", true, false, false, false, false, false);
+                    else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 3 && Source != "KS")
+                        if (Target != null && Player.ServerPosition.Distance(Target.Position) <= 525)
+                        {
+                            Player.IssueOrder(GameObjectOrder.AttackUnit, Target);
+                        }
             }
         }
 
@@ -820,141 +860,418 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             {
                 if (GetComboDamage(x, Source, true, false, false, false, false, false) > x.Health) //Q
                 {
-                    BestCombo = "Q";
-                    Break = CastTime(x, true, false, false, false, false, false);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "Q";
+                        Break = CastTime(x, true, false, false, false, false, false);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseQKS").GetValue<bool>())
+                        {
+                            BestCombo = "Q";
+                            Break = CastTime(x, true, false, false, false, false, false);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, false, true, true, false, false, false) > x.Health) //E+W
                 {
-                    BestCombo = "E+W";
-                    Break = CastTime(x, false, true, true, false, false, false);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "E+W";
+                        Break = CastTime(x, false, true, true, false, false, false);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseWKS").GetValue<bool>())
+                        {
+                            BestCombo = "E+W";
+                            Break = CastTime(x, false, true, true, false, false, false);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, true, true, true, false, false, false) > x.Health) //E+W+Q
                 {
-                    BestCombo = "E+W+Q";
-                    Break = CastTime(x, true, true, true, false, false, false);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "E+W+Q";
+                        Break = CastTime(x, true, true, true, false, false, false);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseQKS").GetValue<bool>() && menu.Item("UseWKS").GetValue<bool>())
+                        {
+                            BestCombo = "E+W+Q";
+                            Break = CastTime(x, true, true, true, false, false, false);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, true, true, true, false, true, false) > x.Health) //DFG+E+W+Q
                 {
-                    BestCombo = "|DFG|E+W+Q";
-                    Break = CastTime(x, true, true, true, false, true, false);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "|DFG|E+W+Q";
+                        Break = CastTime(x, true, true, true, false, true, false);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseQKS").GetValue<bool>() && menu.Item("UseWKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>())
+                        {
+                            BestCombo = "|DFG|E+W+Q";
+                            Break = CastTime(x, true, true, true, false, true, false);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, false, true, true, false, true, false) > x.Health) //DFG+E+W
                 {
-                    BestCombo = "|DFG|E+W";
-                    Break = CastTime(x, false, true, true, false, true, false);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "|DFG|E+W";
+                        Break = CastTime(x, false, true, true, false, true, false);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseWKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>())
+                        {
+                            BestCombo = "|DFG|E+W";
+                            Break = CastTime(x, false, true, true, false, true, false);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, true, false, false, false, true, false) > x.Health) //DFG+Q
                 {
-                    BestCombo = "|DFG|Q";
-                    Break = CastTime(x, true, false, false, false, true, false);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "|DFG|Q";
+                        Break = CastTime(x, true, false, false, false, true, false);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseQKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>())
+                        {
+                            BestCombo = "|DFG|Q";
+                            Break = CastTime(x, true, false, false, false, true, false);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, false, true, true, true, false, false) > x.Health) //E+W+R
                 {
-                    BestCombo = "E+W+R";
-                    Break = CastTime(x, false, true, true, true, false, false);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "E+W+R";
+                        Break = CastTime(x, false, true, true, true, false, false);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseWKS").GetValue<bool>() && menu.Item("UseRKS").GetValue<bool>())
+                        {
+                            BestCombo = "E+W+R";
+                            Break = CastTime(x, false, true, true, true, false, false);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
+
                 }
                 else if (GetComboDamage(x, Source, true, true, true, true, false, false) > x.Health) //E+W+R+Q
                 {
-                    BestCombo = "E+W+R+Q";
-                    Break = CastTime(x, true, true, true, true, false, false);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "E+W+R+Q";
+                        Break = CastTime(x, true, true, true, true, false, false);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseQKS").GetValue<bool>() && menu.Item("UseWKS").GetValue<bool>() && menu.Item("UseRKS").GetValue<bool>())
+                        {
+                            BestCombo = "E+W+R+Q";
+                            Break = CastTime(x, true, true, true, true, false, false);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, false, false, true, true, false, false) > x.Health) //E+R
                 {
-                    BestCombo = "E+R";
-                    Break = CastTime(x, false, false, true, true, false, false);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "E+R";
+                        Break = CastTime(x, false, false, true, true, false, false);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseEKS").GetValue<bool>() && menu.Item("UseRKS").GetValue<bool>())
+                        {
+                            BestCombo = "E+R";
+                            Break = CastTime(x, false, false, true, true, false, false);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, false, false, false, true, false, false) > x.Health) //R
                 {
-                    BestCombo = "R";
-                    Break = CastTime(x, false, false, false, true, false, false);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "R";
+                        Break = CastTime(x, false, false, false, true, false, false);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseRKS").GetValue<bool>())
+                        {
+                            BestCombo = "R";
+                            Break = CastTime(x, false, false, false, true, false, false);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, true, false, true, true, true, false) > x.Health) //DFG+E+R+Q
                 {
-                    BestCombo = "|DFG|E+R+Q";
-                    Break = CastTime(x, true, false, true, true, true, false);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "|DFG|E+R+Q";
+                        Break = CastTime(x, true, false, true, true, true, false);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseQKS").GetValue<bool>() && menu.Item("UseRKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>())
+                        {
+                            BestCombo = "|DFG|E+R+Q";
+                            Break = CastTime(x, true, false, true, true, true, false);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, false, true, true, true, true, false) > x.Health) //DFG+E+W+R
                 {
-                    BestCombo = "|DFG|E+W+R";
-                    Break = CastTime(x, false, true, true, true, true, false);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "|DFG|E+W+R";
+                        Break = CastTime(x, false, true, true, true, true, false);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseWKS").GetValue<bool>() && menu.Item("UseRKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>())
+                        {
+                            BestCombo = "|DFG|E+W+R";
+                            Break = CastTime(x, false, true, true, true, true, false);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, true, true, true, true, true, false) > x.Health) //DFG+E+W+R+Q
                 {
-                    BestCombo = "|DFG|E+W+R+Q";
-                    Break = CastTime(x, true, true, true, true, true, false);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "|DFG|E+W+R+Q";
+                        Break = CastTime(x, true, true, true, true, true, false);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseQKS").GetValue<bool>() && menu.Item("UseWKS").GetValue<bool>() && menu.Item("UseRKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>())
+                        {
+                            BestCombo = "|DFG|E+W+R+Q";
+                            Break = CastTime(x, true, true, true, true, true, false);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, false, false, false, true, true, false) > x.Health) //DFG+R
                 {
-                    BestCombo = "|DFG|R";
-                    Break = CastTime(x, false, false, false, true, true, false);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "|DFG|R";
+                        Break = CastTime(x, false, false, false, true, true, false);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseRKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>())
+                        {
+                            BestCombo = "|DFG|R";
+                            Break = CastTime(x, false, false, false, true, true, false);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, true, false, true, false, false, true) > x.Health) //E+Q+IGN
                 {
-                    BestCombo = "E+Q+IGN";
-                    Break = CastTime(x, true, false, true, false, false, true);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "E+Q+IGN";
+                        Break = CastTime(x, true, false, true, false, false, true);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseQKS").GetValue<bool>() && menu.Item("UseIGNKS").GetValue<bool>())
+                        {
+                            BestCombo = "E+Q+IGN";
+                            Break = CastTime(x, true, false, true, false, false, true);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, false, true, true, false, false, true) > x.Health) //E+W+IGN
                 {
-                    BestCombo = "E+W+IGN";
-                    Break = CastTime(x, false, true, true, false, false, true);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "E+W+IGN";
+                        Break = CastTime(x, false, true, true, false, false, true);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseWKS").GetValue<bool>() && menu.Item("UseIGNKS").GetValue<bool>())
+                        {
+                            BestCombo = "E+W+IGN";
+                            Break = CastTime(x, false, true, true, false, false, true);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, true, true, true, false, false, true) > x.Health) //E+W+Q+IGN
                 {
-                    BestCombo = "E+W+Q+IGN";
-                    Break = CastTime(x, true, true, true, false, false, true);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "E+W+Q+IGN";
+                        Break = CastTime(x, true, true, true, false, false, true);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseQKS").GetValue<bool>() && menu.Item("UseWKS").GetValue<bool>() && menu.Item("UseIGNKS").GetValue<bool>())
+                        {
+                            BestCombo = "E+W+Q+IGN";
+                            Break = CastTime(x, true, true, true, false, false, true);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, true, true, true, true, false, true) > x.Health) //E+W+R+Q+IGN
                 {
-                    BestCombo = "E+W+R+Q+IGN";
-                    Break = CastTime(x, true, true, true, true, false, true);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "E+W+R+Q+IGN";
+                        Break = CastTime(x, true, true, true, true, false, true);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseQKS").GetValue<bool>() && menu.Item("UseWKS").GetValue<bool>() && menu.Item("UseRKS").GetValue<bool>() && menu.Item("UseIGNKS").GetValue<bool>())
+                        {
+                            BestCombo = "E+W+R+Q+IGN";
+                            Break = CastTime(x, true, true, true, true, false, true);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, true, false, true, false, true, true) > x.Health) //DFG+E+Q+IGN
                 {
-                    BestCombo = "|DFG|E+Q+IGN";
-                    Break = CastTime(x, true, false, true, false, true, true);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "|DFG|E+Q+IGN";
+                        Break = CastTime(x, true, false, true, false, true, true);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseQKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>() && menu.Item("UseIGNKS").GetValue<bool>())
+                        {
+                            BestCombo = "|DFG|E+Q+IGN";
+                            Break = CastTime(x, true, false, true, false, true, true);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, false, true, true, false, true, true) > x.Health) //DFG+E+W+IGN
                 {
-                    BestCombo = "|DFG|E+W+IGN";
-                    Break = CastTime(x, false, true, true, false, true, true);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "|DFG|E+W+IGN";
+                        Break = CastTime(x, false, true, true, false, true, true);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseWKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>() && menu.Item("UseIGNKS").GetValue<bool>())
+                        {
+                            BestCombo = "|DFG|E+W+IGN";
+                            Break = CastTime(x, false, true, true, false, true, true);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, true, true, true, false, true, true) > x.Health) //DFG+E+W+Q+IGN
                 {
-                    BestCombo = "|DFG|E+W+Q+IGN";
-                    Break = CastTime(x, true, true, true, false, true, true);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "|DFG|E+W+Q+IGN";
+                        Break = CastTime(x, true, true, true, false, true, true);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseQKS").GetValue<bool>() && menu.Item("UseWKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>() && menu.Item("UseIGNKS").GetValue<bool>())
+                        {
+                            BestCombo = "|DFG|E+W+Q+IGN";
+                            Break = CastTime(x, true, true, true, false, true, true);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, true, true, true, true, true, true) > x.Health) //DFG+E+W+R+Q+IGN
                 {
-                    BestCombo = "|DFG|E+W+R+Q+IGN";
-                    Break = CastTime(x, true, true, true, true, true, true);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "|DFG|E+W+R+Q+IGN";
+                        Break = CastTime(x, true, true, true, true, true, true);
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseQKS").GetValue<bool>() && menu.Item("UseWKS").GetValue<bool>() && menu.Item("UseRKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>() && menu.Item("UseIGNKS").GetValue<bool>())
+                        {
+                            BestCombo = "|DFG|E+W+R+Q+IGN";
+                            Break = CastTime(x, true, true, true, true, true, true);
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
                 else if (GetComboDamage(x, Source, false, false, false, false, false, true) > x.Health)  //IGN
                 {
-                    BestCombo = "IGN";
-                    Break = CastTime(x, false, false, false, false, false, true);
-                    ComboStarted = Environment.TickCount;
+                    if (Source != "KS")
+                    {
+                        BestCombo = "IGN";
+                        Break = 3000;
+                        ComboStarted = Environment.TickCount;
+                    }
+                    else
+                    {
+                        if (menu.Item("UseIGNKS").GetValue<bool>())
+                        {
+                            BestCombo = "IGN";
+                            Break = 3000;
+                            ComboStarted = Environment.TickCount;
+                        }
+                    }
                 }
             }
             if (BestCombo == null) //Not Killable
