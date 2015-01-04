@@ -241,7 +241,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.AddSubMenu(targetSelectorMenu);
 
             //Orbwalker
-            orbwalkerMenu.AddItem(new MenuItem("Orbwalker_Mode", "Regular Orbwalker").SetValue(false));
+            orbwalkerMenu.AddItem(new MenuItem("Orbwalker_Mode", "Regular Orbwalker").SetValue(true));
             menu.AddSubMenu(orbwalkerMenu);
             chooseOrbwalker(menu.Item("Orbwalker_Mode").GetValue<bool>());
 
@@ -273,10 +273,18 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Drawings").AddItem(new MenuItem("MinionMarker", "Mark Q Farm Minions").SetValue(new Circle(true, Color.Green)));
             menu.SubMenu("Drawings").AddItem(new MenuItem("TText", "Mark Targets with Circles").SetValue(true));
             menu.SubMenu("Drawings").AddItem(new MenuItem("LText", "Display Locked Target[HP BAR]").SetValue(true));
-            menu.SubMenu("Drawings").AddItem(new MenuItem("manaStatus", "Mana status").SetValue(true));
             menu.SubMenu("Drawings").AddItem(new MenuItem("ExtraNeeded", "Show Extra/Needed Damage").SetValue(true));
             menu.SubMenu("Drawings").AddItem(new MenuItem("OptimalCombo", "Show Best Kill Combo[FPS]").SetValue(false));
 
+            //Mana Manager menu:
+            menu.AddSubMenu(new Menu("Mana Manager", "manam"));
+            menu.SubMenu("manam").AddItem(new MenuItem("manaStatus", "Display Mana Status").SetValue(true));
+            menu.SubMenu("manam").AddItem(new MenuItem("wusage", "WaveClear if mana > (%)").SetValue(new Slider(0)));
+            menu.SubMenu("manam").AddItem(new MenuItem("qusage", "Q farm if mana > (%)").SetValue(new Slider(0)));
+            menu.SubMenu("manam").AddItem(new MenuItem("husage", "Harass if mana > (%)").SetValue(new Slider(0)));
+            menu.SubMenu("manam").AddItem(new MenuItem("SaveEW", "Save Mana for E(WaveClear)").SetValue(false));
+            menu.SubMenu("manam").AddItem(new MenuItem("SaveE", "Save Mana for E(Q farm)").SetValue(false));
+            menu.SubMenu("manam").AddItem(new MenuItem("SaveEH", "Save Mana for E(Harass)").SetValue(false));
 
             //Misc menu:
             menu.AddSubMenu(new Menu("Other", "Other"));
@@ -293,7 +301,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             //Farm menu:
             menu.AddSubMenu(new Menu("Farm", "Farm"));
             menu.SubMenu("Farm").AddItem(new MenuItem("dontfarm", "Disable Q farm when using any combos").SetValue(true));
-            menu.SubMenu("Farm").AddItem(new MenuItem("SaveE", "Save Mana for E while Farming").SetValue(false));
             menu.SubMenu("Farm").AddItem(new MenuItem("OnlySiege", "Last hit only siege creeps").SetValue(false));
             menu.SubMenu("Farm").AddItem(new MenuItem("WAmount", "Min Minions To Land W").SetValue(new Slider(3, 1, 7)));
             menu.SubMenu("Farm").AddItem(new MenuItem("FarmMove", "Move To mouse").SetValue(new StringList(new[] { "Never", "Lane Clear", "Q farm", "Lane Clear & Q farm" }, 0)));
@@ -313,7 +320,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("AutoKS").AddItem(new MenuItem("UseDFGKS", "Use DFG").SetValue(false));
             menu.SubMenu("AutoKS").AddItem(new MenuItem("UseIGNKS", "Use IGN").SetValue(false));
             menu.SubMenu("AutoKS").AddItem(new MenuItem("RangeKS", "KS only when in shortest needed spell range").SetValue(true));
-            menu.SubMenu("AutoKS").AddItem(new MenuItem("DisableKS", "Disable KS when using combos").SetValue(true));
+            menu.SubMenu("AutoKS").AddItem(new MenuItem("DisableKS", "Disable KS when using combos").SetValue(false));
             menu.SubMenu("AutoKS").AddItem(new MenuItem("AutoKST", "AutoKS (toggle)!").SetValue(new KeyBind("U".ToCharArray()[0], KeyBindType.Toggle, true)));
 
             //Harass menu:
@@ -322,13 +329,19 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Harass").AddItem(new MenuItem("WaitW", "Cast W before Q").SetValue(false));
 
             //Combo menu:
-            menu.AddSubMenu(new Menu("Combo", "Combo"));
+            menu.AddSubMenu(new Menu("Combo and Casting", "Combo"));
             menu.SubMenu("Combo").AddItem(new MenuItem("LockTargets", "Lock Targets with Left Click").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("DontEShields", "Dont use E in spell shields").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("DontWimm", "Don't Use W on CC'ed targets in range misc when comboing").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("ToOrb", "OrbWalk when using any combat functions").SetValue(false));
             menu.SubMenu("Combo").AddItem(new MenuItem("CastMode", "E and W settings").SetValue(new StringList(new[] { "Use E before W", "Use W before E", }, 0)));
-            menu.SubMenu("Combo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None" }, 2)));
+            menu.SubMenu("Combo").AddSubMenu(new Menu("Smart Combo Settings", "MainCombo"));
+            menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("If combo requires successful W hit").AddItem(new MenuItem("ComboWaitMode", "Choosed Mode:").SetValue(new StringList(new[] { "Wait for W to land first", "Don't wait for W to land", }, 0)));
+            menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("If combo requires successful W hit").AddItem(new MenuItem("IgnoreQ", "Allow Q Cast without W Check").SetValue(false));
+            menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("If combo requires successful W hit").AddItem(new MenuItem("IgnoreDFG", "Allow DFG Cast without W Check").SetValue(false));
+            menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("If combo requires successful W hit").AddItem(new MenuItem("IgnoreR", "Allow R Cast without W Check").SetValue(false));
+            menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("If combo requires successful W hit").AddItem(new MenuItem("IgnoreIGN", "Allow IGN Cast without W Check").SetValue(false));
+            menu.SubMenu("Combo").SubMenu("MainCombo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None" }, 2)));
             menu.SubMenu("Combo").AddSubMenu(new Menu("Dont use R,IGN,DFG if target has", "DontRIGN"));
             foreach (var buff in buffList)
                 menu.SubMenu("Combo").SubMenu("DontRIGN").AddItem(new MenuItem("dont" + buff.Name, buff.MenuName).SetValue(true));
@@ -349,11 +362,27 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
-
+            #region ComboShetOnUpdate
             if (Delay != 0f)
             {
                 //int I = Environment.TickCount;
                 //Drawing.DrawText(Player.HPBarPosition.X + 55, Player.HPBarPosition.Y + 50, System.Drawing.Color.LightGreen, "Combo:" + Ccombo + "(" + (Environment.TickCount - Delay1) + "/" + Delay + ")");
+
+                if (Ccombo.Contains("IGN"))
+                {
+                    int I = 0;
+                    if (Ccombo.Contains("E")) I += 200;
+                    if (Ccombo.Contains("W")) I += 1400;
+                    if (Ccombo.Contains("Q")) I += 600;
+                    if (Ccombo.Contains("R")) I += 600;
+                    if (Environment.TickCount - Delay1 > I && Player.Spellbook.CanUseSpell(IgniteSlot) == SpellState.Ready)
+                    {
+                        Delay = 0f;
+                        Delay1 = 0f;
+                        Ccombo = null;
+                        I = 0;
+                    }
+                }
                 if (Environment.TickCount - Delay1 > Delay)
                 {
                     Delay = 0f;
@@ -366,6 +395,21 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             {
                 //int I = Environment.TickCount;
                 //Drawing.DrawText(Player.HPBarPosition.X + 55, Player.HPBarPosition.Y + 50, System.Drawing.Color.LightGreen, "Combo:" + Ccombo + "(" + (Environment.TickCount - Delay1) + "/" + Delay + ")");
+                if (Ccombo.Contains("IGN"))
+                {
+                    int II = 0;
+                    if (Ccombo.Contains("E")) II += 200;
+                    if (Ccombo.Contains("W")) II += 1400;
+                    if (Ccombo.Contains("Q")) II += 600;
+                    if (Ccombo.Contains("R")) II += 600;
+                    if (Environment.TickCount - Delayy1 > II && Player.Spellbook.CanUseSpell(IgniteSlot) == SpellState.Ready)
+                    {
+                        Delayy = 0f;
+                        Delayy1 = 0f;
+                        Cccombo = null;
+                        II = 0;
+                    }
+                }
                 if (Environment.TickCount - Delayy1 > Delayy)
                 {
                     Delayy = 0f;
@@ -373,6 +417,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     Cccombo = null;
                 }
             }
+            #endregion
 
             #region OnUpdate
             if (ChoosedTarget != null && ChoosedTarget.IsDead || !menu.Item("LockTargets").GetValue<bool>())
@@ -409,11 +454,15 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
                 if (menu.Item("HarassActive").GetValue<KeyBind>().Active)
                 {
+                    if (Player.Mana / Player.MaxMana * 100 < menu.Item("husage").GetValue<Slider>().Value) return;
+                    if (menu.Item("SaveEH").GetValue<bool>() && !HasMana(false, false, true, false)) return;
                     Harass();
                 }
 
                 if (menu.Item("LastHitWW").GetValue<KeyBind>().Active)
                 {
+                    if (Player.Mana / Player.MaxMana * 100 < menu.Item("wusage").GetValue<Slider>().Value) return;
+                    if (menu.Item("SaveEW").GetValue<bool>() && !HasMana(false, false, true, false)) return;
                     lastHitW();
                     if (menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 1 || menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 3) if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
                 }
@@ -461,6 +510,8 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
             if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active)
             {
+                if (Player.Mana / Player.MaxMana * 100 < menu.Item("qusage").GetValue<Slider>().Value) return;
+                if (menu.Item("SaveE").GetValue<bool>() && !HasMana(false, false, true, false)) return;
                 if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("dontfarm").GetValue<bool>()) return;
                 if (menu.Item("OnlySiege").GetValue<bool>())
                 {
@@ -575,23 +626,27 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             }
             #endregion
             #region Mana Status
-            if (ManaMode != 0)
+            if (menu.Item("manaStatus").GetValue<bool>())
             {
-                Vector2 wts = Drawing.WorldToScreen(Player.Position);
-                if (ManaMode == 1)
+                if (ManaMode != 0)
                 {
-                    Drawing.DrawText(wts[0] - 30, wts[1], Color.White, ("Q(" + NeededCD + ")s"));
-                }
-                else if (ManaMode == 2)
-                {
-                    Drawing.DrawText(wts[0] - 30, wts[1], Color.White, ("E+W+Q(" + NeededCD + ")s"));
-                }
-                else if (ManaMode == 3)
-                {
-                    Drawing.DrawText(wts[0] - 30, wts[1], Color.White, ("E+W+Q+R(" + NeededCD + ")s"));
+                    Vector2 wts = Drawing.WorldToScreen(Player.Position);
+                    if (ManaMode == 1)
+                    {
+                        Drawing.DrawText(wts[0] - 30, wts[1], Color.White, ("Q(" + NeededCD + ")s"));
+                    }
+                    else if (ManaMode == 2)
+                    {
+                        Drawing.DrawText(wts[0] - 30, wts[1], Color.White, ("E+W+Q(" + NeededCD + ")s"));
+                    }
+                    else if (ManaMode == 3)
+                    {
+                        Drawing.DrawText(wts[0] - 30, wts[1], Color.White, ("E+W+Q+R(" + NeededCD + ")s"));
+                    }
                 }
             }
             #endregion
+            #region InfoTable
             #region InfoTable
             if (menu.Item("InfoTable").GetValue<KeyBind>().Active)
             {
@@ -712,10 +767,14 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     TheCombo = GetBestCombo(Target, "KS");
                 }
 
-                if (TheCombo == "Q" && HasMana(true, false, false, false)) //Q
+                if (TheCombo == "E+Q" && HasMana(true, false, true, false)) //E+Q
+                    UseSpells(Target, "N", true, false, true, false, false, false);
+                else if (TheCombo == "Q" && HasMana(true, false, false, false)) //Q
                     UseSpells(Target, "N", true, false, false, false, false, false);
                 else if (TheCombo == "E+W" && HasMana(false, true, true, false)) //E+W
                     UseSpells(Target, "NE", false, true, true, false, false, false);
+                else if (TheCombo == "W" && HasMana(false, true, false, false)) //W
+                    UseSpells(Target, "NE", false, true, false, false, false, false);
                 else if (TheCombo == "E+W+Q" && HasMana(true, true, true, false)) //E+W+Q
                     UseSpells(Target, "NE", true, true, true, false, false, false);
                 else if (TheCombo == "|DFG|E+W+Q" && HasMana(true, true, true, false)) //DFG+E+W+Q
@@ -792,7 +851,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     if (W.IsReady())
                     {
                         var pred = W.GetPrediction(T);
-                        if (Source == "NE")
+                        if (Source == "NE" && menu.Item("ComboWaitMode").GetValue<StringList>().SelectedIndex == 0)
                         {
                             if (pred.Hitchance == HitChance.VeryHigh || T.Buffs.Where(b => b.IsActive && Game.Time < b.EndTime && (b.Type == BuffType.Charm || b.Type == BuffType.Knockback || b.Type == BuffType.Stun || b.Type == BuffType.Suppression || b.Type == BuffType.Snare)).Aggregate(0f, (current, buff) => Math.Max(current, buff.EndTime)) - Game.Time >= W.Delay && W.IsReady())
                                 W.Cast(T.ServerPosition, Packets());
@@ -846,11 +905,11 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             {
                 if (Dfg.IsReady() && !HasBuffs(T))
                 {
-                    if (Source == "NE")
+                    if (Source == "NE" && menu.Item("ComboWaitMode").GetValue<StringList>().SelectedIndex == 0)
                     {
                         if (menu.Item("CastMode").GetValue<StringList>().SelectedIndex == 0)
                         {
-                            if (!W.IsReady())
+                            if (menu.Item("IgnoreDFG").GetValue<bool>() || !W.IsReady())
                                 Items.UseItem(Dfg.Id, T);
                         }
                         else
@@ -871,11 +930,11 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             {
                 if (R.IsReady() && !HasBuffs(T))
                 {
-                    if (Source == "NE")
+                    if (Source == "NE" && menu.Item("ComboWaitMode").GetValue<StringList>().SelectedIndex == 0)
                     {
                         if (menu.Item("CastMode").GetValue<StringList>().SelectedIndex == 0)
                         {
-                            if (!W.IsReady())
+                            if (menu.Item("IgnoreR").GetValue<bool>() || !W.IsReady())
                                 R.CastOnUnit(T, Packets());
                         }
                         else
@@ -894,11 +953,14 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
             if (QQ && T != null && !HasBuffs(T))
             {
-                if (Source == "NE")
+                if (Source == "NE" && menu.Item("ComboWaitMode").GetValue<StringList>().SelectedIndex == 0)
                 {
                     if (menu.Item("CastMode").GetValue<StringList>().SelectedIndex == 0)
                     {
-                        Q.CastOnUnit(T, Packets());
+                        if (menu.Item("IgnoreQ").GetValue<bool>() || !W.IsReady())
+                        {
+                            Q.CastOnUnit(T, Packets());
+                        }
                     }
                     else
                     {
@@ -927,11 +989,11 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             {
                 if (Player.Spellbook.CanUseSpell(IgniteSlot) == SpellState.Ready && !HasBuffs(T))
                 {
-                    if (Source == "NE")
+                    if (Source == "NE" && menu.Item("ComboWaitMode").GetValue<StringList>().SelectedIndex == 0)
                     {
                         if (menu.Item("CastMode").GetValue<StringList>().SelectedIndex == 0)
                         {
-                            if (!W.IsReady())
+                            if (menu.Item("IgnoreIGN").GetValue<bool>() || !W.IsReady())
                                 Player.Spellbook.CastSpell(IgniteSlot, T);
                         }
                         else
@@ -953,7 +1015,25 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         {
             string BestCombo = null;
 
-            if (GetComboDamage(x, Source, true, false, false, false, false, false) > x.Health) //Q
+            if (GetComboDamage(x, Source, true, false, true, false, false, false) > x.Health) //E+Q
+            {
+                if (HasMana(true, false, true, false))
+                {
+                    if (Source != "KS")
+                    {
+                        BestCombo = "E+Q";
+                    }
+                    else
+                    {
+                        if (menu.Item("UseQKS").GetValue<bool>())
+                        {
+                            BestCombo = "E+Q";
+                        }
+                    }
+                }
+
+            }
+            else if (GetComboDamage(x, Source, true, false, false, false, false, false) > x.Health) //Q
             {
                 if (HasMana(true, false, false, false))
                 {
@@ -984,6 +1064,23 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                         if (menu.Item("UseWKS").GetValue<bool>())
                         {
                             BestCombo = "E+W";
+                        }
+                    }
+                }
+            }
+            else if (GetComboDamage(x, Source, false, true, false, false, false, false) > x.Health) //W
+            {
+                if (HasMana(false, true, false, false))
+                {
+                    if (Source != "KS")
+                    {
+                        BestCombo = "W";
+                    }
+                    else
+                    {
+                        if (menu.Item("UseWKS").GetValue<bool>())
+                        {
+                            BestCombo = "W";
                         }
                     }
                 }
@@ -1458,7 +1555,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         public static void lastHit()
         {
             if (!Orbwalking.CanMove(40)) return;
-            if (menu.Item("SaveE").GetValue<bool>() && !HasMana(false, false, true, false) && Exists(false, false, true, false, false, false)) return;
             if (Q.IsReady())
             {
                 if (_m != null)
