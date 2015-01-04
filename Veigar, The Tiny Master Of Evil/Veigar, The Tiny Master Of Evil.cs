@@ -744,12 +744,15 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 else if (TheCombo == "IGN" && HasMana(false, false, false, false)) //IGN
                     UseSpells(Target, "N", false, false, false, false, false, true);
                 else if (TheCombo == "Unkillable" && HasMana(false, false, false, false)) //Unkillable
+                if(Source == "Combo")
+                {
                     if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 2)
                         return;
                     else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 0)
                         Harass();
                     else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 1)
                         UseSpells(Target, "N", true, false, false, false, false, false);
+                }
             }
         }
 
