@@ -279,7 +279,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             //Mana Manager menu:
             menu.AddSubMenu(new Menu("Mana Manager", "manam"));
             menu.SubMenu("manam").AddItem(new MenuItem("manaStatus", "Display Mana Status").SetValue(true));
-            menu.SubMenu("manam").AddItem(new MenuItem("wusage","WaveClear if mana > (%)").SetValue(new Slider(0)));
+            menu.SubMenu("manam").AddItem(new MenuItem("wusage", "WaveClear if mana > (%)").SetValue(new Slider(0)));
             menu.SubMenu("manam").AddItem(new MenuItem("qusage", "Q farm if mana > (%)").SetValue(new Slider(0)));
             menu.SubMenu("manam").AddItem(new MenuItem("husage", "Harass if mana > (%)").SetValue(new Slider(0)));
             menu.SubMenu("manam").AddItem(new MenuItem("SaveEW", "Save Mana for E(WaveClear)").SetValue(false));
@@ -367,8 +367,8 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             {
                 //int I = Environment.TickCount;
                 //Drawing.DrawText(Player.HPBarPosition.X + 55, Player.HPBarPosition.Y + 50, System.Drawing.Color.LightGreen, "Combo:" + Ccombo + "(" + (Environment.TickCount - Delay1) + "/" + Delay + ")");
-                
-                if(Ccombo.Contains("IGN"))
+
+                if (Ccombo.Contains("IGN"))
                 {
                     int I = 0;
                     if (Ccombo.Contains("E")) I += 200;
@@ -417,7 +417,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     Cccombo = null;
                 }
             }
-#endregion
+            #endregion
 
             #region OnUpdate
             if (ChoosedTarget != null && ChoosedTarget.IsDead || !menu.Item("LockTargets").GetValue<bool>())
@@ -585,6 +585,33 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                             else
                                 Drawing.DrawText(enemy.HPBarPosition.X + 7, enemy.HPBarPosition.Y + 1, Color.White, "Unkillable(" + ENdamage + ")");
                         }
+
+                        //var hpBarPos = enemy.HPBarPosition;
+
+                        //hpBarPos.X += 45;
+                        //hpBarPos.Y += 18;
+
+                        //var combodamage = GetComboDamage(enemy, "Cunts", true, true, true, true, true, true);
+
+                        //var PercentHPleftAfterCombo = (enemy.Health - combodamage) / enemy.MaxHealth;
+                        //var PercentHPleft = enemy.Health / enemy.MaxHealth;
+                        //if (PercentHPleftAfterCombo < 0) PercentHPleftAfterCombo = 0;
+
+                        //double comboXPos = hpBarPos.X - 36 + (107 * PercentHPleftAfterCombo);
+                        //double currentHpxPos = hpBarPos.X - 36 + (107 * PercentHPleft);
+
+                        //var barcolor = Color.FromArgb(130, 255, 0, 0);
+                        //var barcolorline = Color.WhiteSmoke;
+
+                        //Drawing.DrawLine(
+                        //    (float)comboXPos, hpBarPos.Y, (float)comboXPos, hpBarPos.Y + 5, 1, barcolorline);
+                        //var diff = currentHpxPos - comboXPos;
+                        //for (var i = 0; i < diff; i++)
+                        //{
+                        //    Drawing.DrawLine(
+                        //        (float)comboXPos + i, hpBarPos.Y + 2, (float)comboXPos + i,
+                        //        hpBarPos.Y + 10, 1, barcolor);
+                        //}
                     }
                 }
             }
@@ -691,6 +718,26 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     y = y + 20f;
                 }
             }
+            //    foreach (Obj_AI_Hero enemy in enemyDictionary1.Keys)
+            //    {
+            //        if (!enemy.IsDead)
+            //        {
+            //            if (enemyDictionary1[enemy] == "Unkillable")
+            //            {
+            //                Drawing.DrawText(x, y, System.Drawing.Color.White, enemy.ChampionName + ":" + enemyDictionary1[enemy]);
+            //            }
+            //            else
+            //            {
+            //                Drawing.DrawText(x, y, System.Drawing.Color.White, enemy.ChampionName + ":" + enemyDictionary1[enemy]);
+            //            }
+            //        }
+            //        else
+            //        {
+            //            Drawing.DrawText(x, y, System.Drawing.Color.White, enemy.ChampionName + ":" + "Dead"); //Enemy is dead
+            //        }
+            //        y = y + 20f;
+            //    }
+            //}
             #endregion
             foreach (Spell spell in SpellList)
             {
@@ -1579,51 +1626,65 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         private static float GetComboDamage(Obj_AI_Base enemy, string source, bool A, bool B, bool C, bool D, bool EE, bool F)
         {
             double damage = 0d;
+            double cmana = 0d;
 
-            if (Q.IsReady() && A)
+            if (W.IsReady() && B)
             {
+                cmana += Player.Spellbook.GetSpell(SpellSlot.W).ManaCost;
                 if (source == "Comboing" || source == "KS" || source == "Table")
                 {
                     if (!C)
-                        damage += Player.GetSpellDamage(enemy, SpellSlot.Q);
+                        if (cmana <= Player.Mana) damage += Player.GetSpellDamage(enemy, SpellSlot.W);
+                        else cmana -= Player.Spellbook.GetSpell(SpellSlot.W).ManaCost;
                     else if (E.IsReady())
-                        damage += Player.GetSpellDamage(enemy, SpellSlot.Q);
+                        if (cmana <= Player.Mana) damage += Player.GetSpellDamage(enemy, SpellSlot.W);
+                        else cmana -= Player.Spellbook.GetSpell(SpellSlot.W).ManaCost;
                 }
                 else
                 {
-                    damage += Player.GetSpellDamage(enemy, SpellSlot.Q);
+                    if (cmana <= Player.Mana) damage += Player.GetSpellDamage(enemy, SpellSlot.W);
+                    else cmana -= Player.Spellbook.GetSpell(SpellSlot.W).ManaCost;
                 }
             }
 
             if (R.IsReady() && D)
             {
+                cmana += Player.Spellbook.GetSpell(SpellSlot.R).ManaCost;
                 if (source == "Comboing" || source == "KS" || source == "Table")
                 {
                     if (!C)
-                        damage += Player.GetSpellDamage(enemy, SpellSlot.R);
+                        if (cmana <= Player.Mana) damage += Player.GetSpellDamage(enemy, SpellSlot.R);
+                        else cmana -= Player.Spellbook.GetSpell(SpellSlot.R).ManaCost;
                     else if (E.IsReady())
-                        damage += Player.GetSpellDamage(enemy, SpellSlot.R);
+                        if (cmana <= Player.Mana) damage += Player.GetSpellDamage(enemy, SpellSlot.R);
+                        else cmana -= Player.Spellbook.GetSpell(SpellSlot.R).ManaCost;
                 }
                 else
                 {
-                    damage += Player.GetSpellDamage(enemy, SpellSlot.R);
+                    if (cmana <= Player.Mana) damage += Player.GetSpellDamage(enemy, SpellSlot.R);
+                    else cmana -= Player.Spellbook.GetSpell(SpellSlot.R).ManaCost;
                 }
             }
 
-            if (W.IsReady() && B)
+            if (Q.IsReady() && A)
             {
+                cmana += Player.Spellbook.GetSpell(SpellSlot.Q).ManaCost;
                 if (source == "Comboing" || source == "KS" || source == "Table")
                 {
                     if (!C)
-                        damage += Player.GetSpellDamage(enemy, SpellSlot.W);
+                        if (cmana <= Player.Mana) damage += Player.GetSpellDamage(enemy, SpellSlot.Q);
+                        else cmana -= Player.Spellbook.GetSpell(SpellSlot.Q).ManaCost;
                     else if (E.IsReady())
-                        damage += Player.GetSpellDamage(enemy, SpellSlot.W);
+                        if (cmana <= Player.Mana) damage += Player.GetSpellDamage(enemy, SpellSlot.Q);
+                        else cmana -= Player.Spellbook.GetSpell(SpellSlot.Q).ManaCost;
                 }
                 else
                 {
-                    damage += Player.GetSpellDamage(enemy, SpellSlot.W);
+                    if (cmana <= Player.Mana) damage += Player.GetSpellDamage(enemy, SpellSlot.Q);
+                    else cmana -= Player.Spellbook.GetSpell(SpellSlot.Q).ManaCost;
                 }
             }
+
             if (Dfg.IsReady() && EE)
             {
                 if (source == "Comboing" || source == "KS" || source == "Table")
