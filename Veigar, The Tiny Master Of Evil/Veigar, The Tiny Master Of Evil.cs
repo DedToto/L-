@@ -241,7 +241,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.AddSubMenu(targetSelectorMenu);
 
             //Orbwalker
-            orbwalkerMenu.AddItem(new MenuItem("Orbwalker_Mode", "Regular Orbwalker").SetValue(true));
+            orbwalkerMenu.AddItem(new MenuItem("Orbwalker_Mode", "Regular Orbwalker").SetValue(false));
             menu.AddSubMenu(orbwalkerMenu);
             chooseOrbwalker(menu.Item("Orbwalker_Mode").GetValue<bool>());
 
