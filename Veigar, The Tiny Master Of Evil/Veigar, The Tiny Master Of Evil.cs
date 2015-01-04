@@ -1560,15 +1560,15 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             }
             //}
 
-            //if (Items.HasItem(3155, (Obj_AI_Hero)enemy))
-            //{
-            //    damage = damage - 250;
-            //}
+            if (Items.HasItem(3155, (Obj_AI_Hero)enemy))
+            {
+                damage = damage - 250;
+            }
 
-            //if (Items.HasItem(3156, (Obj_AI_Hero)enemy))
-            //{
-            //    damage = damage - 400;
-            //}
+            if (Items.HasItem(3156, (Obj_AI_Hero)enemy))
+            {
+                damage = damage - 400;
+            }
             return (float)damage - 20;
         }
 
