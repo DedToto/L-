@@ -279,7 +279,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             //Mana Manager menu:
             menu.AddSubMenu(new Menu("Mana Manager", "manam"));
             menu.SubMenu("manam").AddItem(new MenuItem("manaStatus", "Display Mana Status").SetValue(true));
-            menu.SubMenu("manam").AddItem(new MenuItem("wusage", "WaveClear if mana > (%)").SetValue(new Slider(0)));
+            menu.SubMenu("manam").AddItem(new MenuItem("wusage","WaveClear if mana > (%)").SetValue(new Slider(0)));
             menu.SubMenu("manam").AddItem(new MenuItem("qusage", "Q farm if mana > (%)").SetValue(new Slider(0)));
             menu.SubMenu("manam").AddItem(new MenuItem("husage", "Harass if mana > (%)").SetValue(new Slider(0)));
             menu.SubMenu("manam").AddItem(new MenuItem("SaveEW", "Save Mana for E(WaveClear)").SetValue(false));
@@ -367,8 +367,8 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             {
                 //int I = Environment.TickCount;
                 //Drawing.DrawText(Player.HPBarPosition.X + 55, Player.HPBarPosition.Y + 50, System.Drawing.Color.LightGreen, "Combo:" + Ccombo + "(" + (Environment.TickCount - Delay1) + "/" + Delay + ")");
-
-                if (Ccombo.Contains("IGN"))
+                
+                if(Ccombo.Contains("IGN"))
                 {
                     int I = 0;
                     if (Ccombo.Contains("E")) I += 200;
@@ -417,7 +417,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     Cccombo = null;
                 }
             }
-            #endregion
+#endregion
 
             #region OnUpdate
             if (ChoosedTarget != null && ChoosedTarget.IsDead || !menu.Item("LockTargets").GetValue<bool>())
@@ -646,7 +646,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 }
             }
             #endregion
-            #region InfoTable
             #region InfoTable
             if (menu.Item("InfoTable").GetValue<KeyBind>().Active)
             {
