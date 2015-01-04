@@ -793,8 +793,8 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         //Use All Available Spells Combo(Independent of CD and target HP)
         private static void AllIn()
         {
-            UseSpells(Target, "AllIn", true, true, true, true, true, true);
             if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
+            UseSpells(Target, "AllIn", true, true, true, true, true, true);
         }
 
         //The Main Smart Combo that chooses the most efficient combo that will ensure the kill
