@@ -31,6 +31,9 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         public static float Delay = 0f;
         public static float Delay1 = 0f;
         public static string Ccombo = null;
+        public static float Delayy = 0f;
+        public static float Delayy1 = 0f;
+        public static string Cccombo = null;
 
         //HUD
         public static List<HUD> HUDlist = new List<HUD>
@@ -349,13 +352,25 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
             if (Delay != 0f)
             {
-                int I = Environment.TickCount;
+                //int I = Environment.TickCount;
                 //Drawing.DrawText(Player.HPBarPosition.X + 55, Player.HPBarPosition.Y + 50, System.Drawing.Color.LightGreen, "Combo:" + Ccombo + "(" + (Environment.TickCount - Delay1) + "/" + Delay + ")");
                 if (Environment.TickCount - Delay1 > Delay)
                 {
                     Delay = 0f;
                     Delay1 = 0f;
                     Ccombo = null;
+                }
+            }
+
+            if (Delayy != 0f)
+            {
+                //int I = Environment.TickCount;
+                //Drawing.DrawText(Player.HPBarPosition.X + 55, Player.HPBarPosition.Y + 50, System.Drawing.Color.LightGreen, "Combo:" + Ccombo + "(" + (Environment.TickCount - Delay1) + "/" + Delay + ")");
+                if (Environment.TickCount - Delayy1 > Delayy)
+                {
+                    Delayy = 0f;
+                    Delayy1 = 0f;
+                    Cccombo = null;
                 }
             }
 
@@ -635,7 +650,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         private static void AutoKS()
         {
             if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("DisableKS").GetValue<bool>()) return;
-            if (Target != null && Player.Distance(Target.Position) <= NeededRange(menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseRKS").GetValue<bool>(), menu.Item("UseDFGKS").GetValue<bool>(), menu.Item("UseIGNKS").GetValue<bool>()) || !menu.Item("RangeKS").GetValue<bool>() && Player.Distance(Target.Position) <= E.Range && !menu.Item("Combo").GetValue<KeyBind>().Active)
+            if (Target != null && Player.Distance(Target.Position) <= NeededRange(menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseRKS").GetValue<bool>(), menu.Item("UseDFGKS").GetValue<bool>(), menu.Item("UseIGNKS").GetValue<bool>()) || !menu.Item("RangeKS").GetValue<bool>() && Player.Distance(Target.Position) <= E.Range)
             {
                 Combo("KS");
             }
@@ -743,7 +758,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     UseSpells(Target, "NE", true, true, true, true, true, true);
                 else if (TheCombo == "IGN" && HasMana(false, false, false, false)) //IGN
                     UseSpells(Target, "N", false, false, false, false, false, true);
-                else if (TheCombo == "Unkillable" && HasMana(false, false, false, false) && Source != "KS") //Unkillable
+                else if (TheCombo == "Unkillable" && HasMana(false, false, false, false)) //Unkillable
                     if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 2)
                         return;
                     else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 0)
@@ -1339,9 +1354,10 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             if (x.IsDead)
             {
                 Ccombo = null;
+                Cccombo = null;
             }
 
-            if (Source != "Table")
+            if (Source == "Comboing")
             {
                 if (Ccombo == null && BestCombo != "Unkillable")
                 {
@@ -1351,18 +1367,38 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 }
             }
 
+            if (Source == "KS")
+            {
+                if (Cccombo == null && BestCombo != "Unkillable")
+                {
+                    Delayy = CastTime(BestCombo);
+                    Delayy1 = Environment.TickCount;
+                    Cccombo = BestCombo;
+                }
+            }
+
             if (Source != "KS" && Source != "Comboing")
             {
                 if (!x.IsVisible)
                     BestCombo = "N/A";
             }
 
-            if (Source != "Table")
+            if (Source == "Comboing" || Source == "KS")
             {
-                if (Ccombo != null)
-                    return Ccombo;
+                if (Source == "Comboing")
+                {
+                    if (Ccombo != null)
+                        return Ccombo;
+                    else
+                        return BestCombo;
+                }
                 else
-                    return BestCombo;
+                {
+                    if (Cccombo != null)
+                        return Cccombo;
+                    else
+                        return BestCombo;
+                }
             }
             else
             {
