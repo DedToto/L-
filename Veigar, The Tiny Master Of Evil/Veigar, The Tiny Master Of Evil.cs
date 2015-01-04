@@ -635,7 +635,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         private static void AutoKS()
         {
             if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("DisableKS").GetValue<bool>()) return;
-            if (Target != null && Player.Distance(Target.Position) <= NeededRange(menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseRKS").GetValue<bool>(), menu.Item("UseDFGKS").GetValue<bool>(), menu.Item("UseIGNKS").GetValue<bool>()) || !menu.Item("RangeKS").GetValue<bool>() && Player.Distance(Target.Position) <= E.Range)
+            if (Target != null && Player.Distance(Target.Position) <= NeededRange(menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseRKS").GetValue<bool>(), menu.Item("UseDFGKS").GetValue<bool>(), menu.Item("UseIGNKS").GetValue<bool>()) || !menu.Item("RangeKS").GetValue<bool>() && Player.Distance(Target.Position) <= E.Range && !menu.Item("Combo").GetValue<KeyBind>().Active)
             {
                 Combo("KS");
             }
