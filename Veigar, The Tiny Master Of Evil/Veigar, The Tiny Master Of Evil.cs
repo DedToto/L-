@@ -336,11 +336,11 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Combo").AddItem(new MenuItem("ToOrb", "OrbWalk when using any combat functions").SetValue(false));
             menu.SubMenu("Combo").AddItem(new MenuItem("CastMode", "E and W settings").SetValue(new StringList(new[] { "Use E before W", "Use W before E", }, 0)));
             menu.SubMenu("Combo").AddSubMenu(new Menu("Smart Combo Settings", "MainCombo"));
-            menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("If combo requires successful W hit").AddItem(new MenuItem("ComboWaitMode", "Choosed Mode:").SetValue(new StringList(new[] { "Wait for W to land first", "Don't wait for W to land", }, 0)));
-            menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("If combo requires successful W hit").AddItem(new MenuItem("IgnoreQ", "Allow Q Cast without W Check").SetValue(false));
-            menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("If combo requires successful W hit").AddItem(new MenuItem("IgnoreDFG", "Allow DFG Cast without W Check").SetValue(false));
-            menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("If combo requires successful W hit").AddItem(new MenuItem("IgnoreR", "Allow R Cast without W Check").SetValue(false));
-            menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("If combo requires successful W hit").AddItem(new MenuItem("IgnoreIGN", "Allow IGN Cast without W Check").SetValue(false));
+            menu.SubMenu("Combo").SubMenu("MainCombo").AddItem(new MenuItem("ComboWaitMode", "Choosed Mode:").SetValue(new StringList(new[] { "Wait for W to land first", "Don't wait for W to land", }, 0)));
+            menu.SubMenu("Combo").SubMenu("MainCombo").AddItem(new MenuItem("IgnoreQ", "Allow Q Cast without W Check").SetValue(false));
+            menu.SubMenu("Combo").SubMenu("MainCombo").AddItem(new MenuItem("IgnoreDFG", "Allow DFG Cast without W Check").SetValue(false));
+            menu.SubMenu("Combo").SubMenu("MainCombo").AddItem(new MenuItem("IgnoreR", "Allow R Cast without W Check").SetValue(false));
+            menu.SubMenu("Combo").SubMenu("MainCombo").AddItem(new MenuItem("IgnoreIGN", "Allow IGN Cast without W Check").SetValue(false));
             menu.SubMenu("Combo").SubMenu("MainCombo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None" }, 2)));
             menu.SubMenu("Combo").AddSubMenu(new Menu("Dont use R,IGN,DFG if target has", "DontRIGN"));
             foreach (var buff in buffList)
