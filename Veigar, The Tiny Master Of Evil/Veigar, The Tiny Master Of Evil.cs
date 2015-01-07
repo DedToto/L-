@@ -298,7 +298,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.AddSubMenu(new Menu("Other", "Other"));
             menu.SubMenu("Other").AddSubMenu(new Menu("Auto W Settings", "wsets"));
             menu.SubMenu("Other").SubMenu("wsets").AddItem(new MenuItem("Wimm", "Use W on CC'ed targets in range").SetValue(true));
-            menu.SubMenu("Other").SubMenu("wsets").AddItem(new MenuItem("Wimmz", "Use W on Zhonyas").SetValue(true));
+            //menu.SubMenu("Other").SubMenu("wsets").AddItem(new MenuItem("Wimmz", "Use W on Zhonyas").SetValue(true));
             menu.SubMenu("Other").AddItem(new MenuItem("StunUnderTower", "Stun Enemies Attacked by Tower").SetValue(true));
             menu.SubMenu("Other").AddItem(new MenuItem("UseInt", "Use E to Interrupt").SetValue(true));
             menu.SubMenu("Other").AddItem(new MenuItem("UseGap", "Use E against GapClosers").SetValue(true));
