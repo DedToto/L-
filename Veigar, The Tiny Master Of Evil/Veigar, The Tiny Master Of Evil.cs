@@ -299,6 +299,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Other").AddSubMenu(new Menu("Auto W Settings", "wsets"));
             menu.SubMenu("Other").SubMenu("wsets").AddItem(new MenuItem("Wimm", "Use W on CC'ed targets in range").SetValue(true));
             //menu.SubMenu("Other").SubMenu("wsets").AddItem(new MenuItem("Wimmz", "Use W on Zhonyas").SetValue(true));
+            menu.SubMenu("Other").SubMenu("wsets").AddItem(new MenuItem("DontWimm", "Disable Auto W when comboing").SetValue(true));
             menu.SubMenu("Other").AddItem(new MenuItem("StunUnderTower", "Stun Enemies Attacked by Tower").SetValue(true));
             menu.SubMenu("Other").AddItem(new MenuItem("UseInt", "Use E to Interrupt").SetValue(true));
             menu.SubMenu("Other").AddItem(new MenuItem("UseGap", "Use E against GapClosers").SetValue(true));
@@ -343,8 +344,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.AddSubMenu(new Menu("Combo and Casting", "Combo"));
             menu.SubMenu("Combo").AddItem(new MenuItem("LockTargets", "Lock Targets with Left Click").SetValue(true));
             menu.SubMenu("Combo").AddItem(new MenuItem("DontEShields", "Dont use E in spell shields").SetValue(true));
-            menu.SubMenu("Combo").AddItem(new MenuItem("DontWimm", "Don't Use W on CC'ed targets in range misc when comboing").SetValue(true));
-            menu.SubMenu("Combo").AddItem(new MenuItem("ToOrb", "OrbWalk when using any combat functions").SetValue(false));
+            menu.SubMenu("Combo").AddItem(new MenuItem("ToOrb", "[in-built]OrbWalk when comboing").SetValue(false));
             menu.SubMenu("Combo").AddItem(new MenuItem("CastMode", "E and W settings").SetValue(new StringList(new[] { "Use E before W", "Use W before E", }, 0)));
             menu.SubMenu("Combo").AddSubMenu(new Menu("Smart Combo Settings", "MainCombo"));
             menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("If combo requires successful W hit").AddItem(new MenuItem("ComboWaitMode", "Choosed Mode:").SetValue(new StringList(new[] { "Wait for W to land first", "Don't wait for W to land", }, 0)));
@@ -566,6 +566,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
         private static void Drawing_OnDraw(EventArgs args)
         {
+            //Drawing.DrawText(Player.HPBarPosition.X + 55, Player.HPBarPosition.Y + 25, System.Drawing.Color.LightGreen, "<font color='#FFFFFF'>RLY</font>");
             //check if player is dead
             if (Player.IsDead) return;
 
@@ -573,12 +574,12 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             {
                 if (ChoosedTarget != null && menu.Item("LockTargets").GetValue<bool>())
                 {
-                    if (menu.Item("TText").GetValue<bool>()) Utility.DrawCircle(ChoosedTarget.Position, 75, Color.LightGreen);
+                    if (menu.Item("TText").GetValue<bool>()) Render.Circle.DrawCircle(ChoosedTarget.Position, 75, Color.LightGreen);
                     Drawing.DrawText(Player.HPBarPosition.X + 55, Player.HPBarPosition.Y + 25, System.Drawing.Color.LightGreen, "Lock:" + ChoosedTarget.ChampionName);
                 }
                 else
                 {
-                    if (menu.Item("TText").GetValue<bool>()) Utility.DrawCircle(Target.Position, 75, Color.Red);
+                    if (menu.Item("TText").GetValue<bool>()) Render.Circle.DrawCircle(Target.Position, 75, Color.Red);
                 }
             }
             else if (Target != null)
@@ -702,7 +703,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             {
                 var MinMar = menu.Item("MinionMarker").GetValue<Circle>();
                 if (_m != null)
-                    Utility.DrawCircle(_m.Position, 75, MinMar.Color);
+                    Render.Circle.DrawCircle(_m.Position, 75, MinMar.Color);
             }
 
             #region Indicators
@@ -811,7 +812,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             {
                 var menuItem = menu.Item(spell.Slot + "Range").GetValue<Circle>();
                 if (menuItem.Active)
-                    Utility.DrawCircle(Player.Position, spell.Range, menuItem.Color);
+                    Render.Circle.DrawCircle(Player.Position, spell.Range, menuItem.Color);
             }
         }
 
@@ -2088,33 +2089,43 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         //Left Click Target Locker
         public static void Game_OnWndProc(WndEventArgs args)
         {
-            if (args.WParam == 1 && (menu.Item("LockTargets").GetValue<bool>())) // Left-Mouse
+            if (args.Msg != (uint)WindowsMessages.WM_LBUTTONDOWN)
             {
-                foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != Player.Team))
+                return;
+            }
+
+            if (menu.Item("LockTargets").GetValue<bool>())
+            {
+                foreach (var objAiHero in from hero in ObjectManager.Get<Obj_AI_Hero>()
+                                          where hero.IsValidTarget()
+                                          select hero
+                                              into h
+                                              orderby h.Distance(Game.CursorPos) descending
+                                              select h
+                                                  into enemy
+                                                  where enemy.Distance(Game.CursorPos) < 150f
+                                                  select enemy)
                 {
-                    if (SharpDX.Vector2.Distance(Game.CursorPos.To2D(), enemy.ServerPosition.To2D()) < 200 && !KeMinimap.Minimap.MouseOver)
+                    if (objAiHero != null && objAiHero.IsVisible && !objAiHero.IsDead)
                     {
-                        if (enemy.IsValidTarget())
+                        if (Environment.TickCount + Game.Ping - TargetLockCD > 200)
                         {
-                            if (Environment.TickCount + Game.Ping - TargetLockCD > 400)
+                            if (ChoosedTarget == null)
                             {
-                                if (ChoosedTarget == null)
+                                ChoosedTarget = objAiHero;
+                            }
+                            else
+                            {
+                                if (ChoosedTarget.Name == objAiHero.Name)
                                 {
-                                    ChoosedTarget = enemy;
+                                    ChoosedTarget = null;
                                 }
                                 else
                                 {
-                                    if (ChoosedTarget.Name == enemy.Name)
-                                    {
-                                        ChoosedTarget = null;
-                                    }
-                                    else
-                                    {
-                                        ChoosedTarget = enemy;
-                                    }
+                                    ChoosedTarget = objAiHero;
                                 }
-                                TargetLockCD = Environment.TickCount;
                             }
+                            TargetLockCD = Environment.TickCount;
                         }
                     }
                 }
@@ -2175,7 +2186,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
             if (pred.Hitchance >= HitChance.High && E.IsReady())
             {
-                E.Cast(castVec);
+                E.Cast(castVec, false);
             }
         }
 
@@ -2188,7 +2199,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
             if (pred.Hitchance >= HitChance.High && E.IsReady())
             {
-                E.Cast(castVec, Packets());
+                E.Cast(castVec, false);
             }
         }
 
