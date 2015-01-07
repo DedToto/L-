@@ -1410,20 +1410,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                         BestCombo = "|DFG|E+W+Q+IGN";
                     }
                 }
-                else if (GetComboDamage(x, Source, true, true, true, true, false, true) > x.Health * op) //E+W+R+Q+IGN
-                {
-                    if (HasMana(true, true, true, true))
-                    {
-                        BestCombo = "E+W+R+Q+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, true, true, true) > x.Health * op) //DFG+E+W+R+Q+IGN
-                {
-                    if (HasMana(true, true, true, true))
-                    {
-                        BestCombo = "|DFG|E+W+R+Q+IGN";
-                    }
-                }
                 else if (GetComboDamage(x, Source, false, false, false, false, false, true) > x.Health * op)  //IGN
                 {
                     if (HasMana(false, false, false, false))
@@ -1485,6 +1471,20 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     if (HasMana(false, false, false, true))
                     {
                         BestCombo = "|DFG|R";
+                    }
+                }
+                else if (GetComboDamage(x, Source, true, true, true, true, false, true) > x.Health * op) //E+W+R+Q+IGN
+                {
+                    if (HasMana(true, true, true, true))
+                    {
+                        BestCombo = "E+W+R+Q+IGN";
+                    }
+                }
+                else if (GetComboDamage(x, Source, true, true, true, true, true, true) > x.Health * op) //DFG+E+W+R+Q+IGN
+                {
+                    if (HasMana(true, true, true, true))
+                    {
+                        BestCombo = "|DFG|E+W+R+Q+IGN";
                     }
                 }
             }
@@ -1560,20 +1560,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                         BestCombo = "|DFG|E+W+Q+IGN";
                     }
                 }
-                else if (GetComboDamage(x, Source, true, true, true, true, true, true) > x.Health * op) //DFG+E+W+R+Q+IGN
-                {
-                    if (HasMana(true, true, true, true))
-                    {
-                        BestCombo = "|DFG|E+W+R+Q+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, true, false, true) > x.Health * op) //E+W+R+Q+IGN
-                {
-                    if (HasMana(true, true, true, true))
-                    {
-                        BestCombo = "E+W+R+Q+IGN";
-                    }
-                }
                 else if (GetComboDamage(x, Source, false, true, true, true, false, false) > x.Health * op) //E+W+R
                 {
                     if (HasMana(false, true, true, true))
@@ -1628,6 +1614,20 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     if (HasMana(false, false, false, true))
                     {
                         BestCombo = "|DFG|R";
+                    }
+                }
+                else if (GetComboDamage(x, Source, true, true, true, true, true, true) > x.Health * op) //DFG+E+W+R+Q+IGN
+                {
+                    if (HasMana(true, true, true, true))
+                    {
+                        BestCombo = "|DFG|E+W+R+Q+IGN";
+                    }
+                }
+                else if (GetComboDamage(x, Source, true, true, true, true, false, true) > x.Health * op) //E+W+R+Q+IGN
+                {
+                    if (HasMana(true, true, true, true))
+                    {
+                        BestCombo = "E+W+R+Q+IGN";
                     }
                 }
             }
