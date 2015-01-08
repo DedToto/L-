@@ -260,7 +260,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Keys").AddItem(new MenuItem("HarassActive", "Harass").SetValue(new KeyBind("Z".ToCharArray()[0], KeyBindType.Press)));
             menu.SubMenu("Keys").AddItem(new MenuItem("Stun Closest Enemy", "Stun Closest Enemy").SetValue(new KeyBind("A".ToCharArray()[0], KeyBindType.Press, false)));
             menu.SubMenu("Keys").AddItem(new MenuItem("LastHitQQ", "Last hit with Q[Toggle]").SetValue(new KeyBind("J".ToCharArray()[0], KeyBindType.Toggle)));
-            menu.SubMenu("Keys").AddItem(new MenuItem("LastHitQ", "Last hit with Q[Hold]").SetValue(new KeyBind("I".ToCharArray()[0], KeyBindType.Toggle)));
+            menu.SubMenu("Keys").AddItem(new MenuItem("LastHitQ", "Last hit with Q[Hold]").SetValue(new KeyBind("I".ToCharArray()[0], KeyBindType.Press, false)));
             menu.SubMenu("Keys").AddItem(new MenuItem("LastHitWW", "Lane Clear with W").SetValue(new KeyBind("K".ToCharArray()[0], KeyBindType.Press, false)));
             menu.SubMenu("Keys").AddItem(new MenuItem("JungleActive", "Jungle Farm").SetValue(new KeyBind("H".ToCharArray()[0], KeyBindType.Press, false)));
             menu.SubMenu("Keys").AddItem(new MenuItem("InfoTable", "Show Info Table[FPS]").SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Toggle)));
@@ -592,7 +592,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             }
 
             //Draw Extra or Needed for kill damage
-            if (menu.Item("ExtraNeeded").GetValue<bool>())
+            if (menu.Item("ExtraNeeded").GetValue<bool>() || menu.Item("InfoTable").GetValue<KeyBind>().Active)
             {
                 foreach (Obj_AI_Hero enemy in enemyDictionary.Keys)
                 {
@@ -1008,7 +1008,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                         var pred = W.GetPrediction(T);
                         if (Source == "NE" && menu.Item("ComboWaitMode").GetValue<StringList>().SelectedIndex == 0)
                         {
-                            if (pred.Hitchance == HitChance.VeryHigh || T.Buffs.Where(b => b.IsActive && Game.Time < b.EndTime && (b.Type == BuffType.Charm || b.Type == BuffType.Knockback || b.Type == BuffType.Stun || b.Type == BuffType.Suppression || b.Type == BuffType.Snare)).Aggregate(0f, (current, buff) => Math.Max(current, buff.EndTime)) - Game.Time >= W.Delay && W.IsReady())
+                            if (pred.Hitchance == HitChance.Immobile || T.Buffs.Where(b => b.IsActive && Game.Time < b.EndTime && (b.Type == BuffType.Charm || b.Type == BuffType.Knockback || b.Type == BuffType.Stun || b.Type == BuffType.Suppression || b.Type == BuffType.Snare)).Aggregate(0f, (current, buff) => Math.Max(current, buff.EndTime)) - Game.Time >= W.Delay && W.IsReady())
                                 W.Cast(T.ServerPosition, Packets());
                         }
                         else
@@ -2102,7 +2102,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             if (menu.Item("LockTargets").GetValue<bool>())
             {
                 foreach (var objAiHero in from hero in ObjectManager.Get<Obj_AI_Hero>()
-                                          where hero.IsValidTarget()
+                                          where hero.IsValidTarget() && !KeMinimap.Minimap.MouseOver
                                           select hero
                                               into h
                                               orderby h.Distance(Game.CursorPos) descending
