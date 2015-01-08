@@ -529,7 +529,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 NeededCD = manaCheck().Item2;
             }
 
-            if (menu.Item("ExtraNeeded").GetValue<bool>())
+            if (menu.Item("ExtraNeeded").GetValue<bool>() || menu.Item("InfoTable").GetValue<KeyBind>().Active)
             {
                 enemyDictionary = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).ToDictionary(enemy => enemy, enemy => GetExtraNeeded(enemy).Item1);
             }
