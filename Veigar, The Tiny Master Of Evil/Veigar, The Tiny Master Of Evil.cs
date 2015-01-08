@@ -259,7 +259,8 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Keys").AddItem(new MenuItem("AllInActive", "Use All Spells").SetValue(new KeyBind("C".ToCharArray()[0], KeyBindType.Press)));
             menu.SubMenu("Keys").AddItem(new MenuItem("HarassActive", "Harass").SetValue(new KeyBind("Z".ToCharArray()[0], KeyBindType.Press)));
             menu.SubMenu("Keys").AddItem(new MenuItem("Stun Closest Enemy", "Stun Closest Enemy").SetValue(new KeyBind("A".ToCharArray()[0], KeyBindType.Press, false)));
-            menu.SubMenu("Keys").AddItem(new MenuItem("LastHitQQ", "Last hit with Q").SetValue(new KeyBind("J".ToCharArray()[0], KeyBindType.Toggle)));
+            menu.SubMenu("Keys").AddItem(new MenuItem("LastHitQQ", "Last hit with Q[Toggle]").SetValue(new KeyBind("J".ToCharArray()[0], KeyBindType.Toggle)));
+            menu.SubMenu("Keys").AddItem(new MenuItem("LastHitQ", "Last hit with Q[Hold]").SetValue(new KeyBind("I".ToCharArray()[0], KeyBindType.Toggle)));
             menu.SubMenu("Keys").AddItem(new MenuItem("LastHitWW", "Lane Clear with W").SetValue(new KeyBind("K".ToCharArray()[0], KeyBindType.Press, false)));
             menu.SubMenu("Keys").AddItem(new MenuItem("JungleActive", "Jungle Farm").SetValue(new KeyBind("H".ToCharArray()[0], KeyBindType.Press, false)));
             menu.SubMenu("Keys").AddItem(new MenuItem("InfoTable", "Show Info Table[FPS]").SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Toggle)));
@@ -361,7 +362,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != Player.Team))
                 menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("il").AddItem(new MenuItem("il" + enemy.BaseSkinName, enemy.BaseSkinName).SetValue(false));
             menu.SubMenu("Combo").SubMenu("MainCombo").AddItem(new MenuItem("Priority", "Saving priority").SetValue(new StringList(new[] { "IGN > R > DFG", "R > IGN > DFG", "R > DFG > IGN" }, 0)));
-            menu.SubMenu("Combo").SubMenu("MainCombo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "Choosed Harass Mode", "Q Harass", "None" }, 2)));
+            menu.SubMenu("Combo").SubMenu("MainCombo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "None", "Choosed Harass Mode", "Q", "E+W", "E+W+Q", }, 0)));
             menu.SubMenu("Combo").AddSubMenu(new Menu("Dont use R,IGN,DFG if target has", "DontRIGN"));
             foreach (var buff in buffList)
                 menu.SubMenu("Combo").SubMenu("DontRIGN").AddItem(new MenuItem("dont" + buff.Name, buff.MenuName).SetValue(true));
@@ -538,7 +539,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 enemyDictionary1 = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget() && menu.Item("il" + enemy.BaseSkinName).GetValue<bool>() == false).ToDictionary(enemy => enemy, enemy => GetBestCombo(enemy, "Table"));
             }
 
-            if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active)
+            if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active || menu.Item("LastHitQ").GetValue<KeyBind>().Active)
             {
                 if (Player.Mana / Player.MaxMana * 100 < menu.Item("qusage").GetValue<Slider>().Value) return;
                 if (menu.Item("SaveE").GetValue<bool>() && !HasMana(false, false, true, false)) return;
@@ -699,7 +700,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 }
             }
 
-            if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active)
+            if (menu.Item("LastHitQQ").GetValue<KeyBind>().Active || menu.Item("LastHitQ").GetValue<KeyBind>().Active)
             {
                 var MinMar = menu.Item("MinionMarker").GetValue<Circle>();
                 if (_m != null)
@@ -968,12 +969,16 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 else if (TheCombo == "IGN" && HasMana(false, false, false, false)) //IGN
                     UseSpells(Target, "N", false, false, false, false, false, true);
                 else if (TheCombo == "Unkillable" && HasMana(false, false, false, false)) //Unkillable
-                    if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 2)
+                    if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 0)
                         return;
-                    else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 0)
-                        Harass();
                     else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 1)
+                        Harass();
+                    else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 2)
                         UseSpells(Target, "N", true, false, false, false, false, false);
+                    else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 3)
+                        UseSpells(Target, "NE", false, true, true, false, false, false);
+                    else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 4)
+                        UseSpells(Target, "NE", true, true, true, false, false, false);
             }
         }
 
@@ -1410,6 +1415,20 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                         BestCombo = "|DFG|E+W+Q+IGN";
                     }
                 }
+                else if (GetComboDamage(x, Source, true, true, true, true, false, true) > x.Health * op) //E+W+R+Q+IGN
+                {
+                    if (HasMana(true, true, true, true))
+                    {
+                        BestCombo = "E+W+R+Q+IGN";
+                    }
+                }
+                else if (GetComboDamage(x, Source, true, true, true, true, true, true) > x.Health * op) //DFG+E+W+R+Q+IGN
+                {
+                    if (HasMana(true, true, true, true))
+                    {
+                        BestCombo = "|DFG|E+W+R+Q+IGN";
+                    }
+                }
                 else if (GetComboDamage(x, Source, false, false, false, false, false, true) > x.Health * op)  //IGN
                 {
                     if (HasMana(false, false, false, false))
@@ -1471,20 +1490,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     if (HasMana(false, false, false, true))
                     {
                         BestCombo = "|DFG|R";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, true, false, true) > x.Health * op) //E+W+R+Q+IGN
-                {
-                    if (HasMana(true, true, true, true))
-                    {
-                        BestCombo = "E+W+R+Q+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, true, true, true) > x.Health * op) //DFG+E+W+R+Q+IGN
-                {
-                    if (HasMana(true, true, true, true))
-                    {
-                        BestCombo = "|DFG|E+W+R+Q+IGN";
                     }
                 }
             }
@@ -1560,6 +1565,20 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                         BestCombo = "|DFG|E+W+Q+IGN";
                     }
                 }
+                else if (GetComboDamage(x, Source, true, true, true, true, true, true) > x.Health * op) //DFG+E+W+R+Q+IGN
+                {
+                    if (HasMana(true, true, true, true))
+                    {
+                        BestCombo = "|DFG|E+W+R+Q+IGN";
+                    }
+                }
+                else if (GetComboDamage(x, Source, true, true, true, true, false, true) > x.Health * op) //E+W+R+Q+IGN
+                {
+                    if (HasMana(true, true, true, true))
+                    {
+                        BestCombo = "E+W+R+Q+IGN";
+                    }
+                }
                 else if (GetComboDamage(x, Source, false, true, true, true, false, false) > x.Health * op) //E+W+R
                 {
                     if (HasMana(false, true, true, true))
@@ -1614,20 +1633,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     if (HasMana(false, false, false, true))
                     {
                         BestCombo = "|DFG|R";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, true, true, true) > x.Health * op) //DFG+E+W+R+Q+IGN
-                {
-                    if (HasMana(true, true, true, true))
-                    {
-                        BestCombo = "|DFG|E+W+R+Q+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, true, false, true) > x.Health * op) //E+W+R+Q+IGN
-                {
-                    if (HasMana(true, true, true, true))
-                    {
-                        BestCombo = "E+W+R+Q+IGN";
                     }
                 }
             }
@@ -2215,6 +2220,17 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             }
         }
 
+        //E CAST(COORDINATES)
+        public static void castE(Vector2 pos)
+        {
+            Vector2 castVec = pos;
+
+            if (E.IsReady())
+            {
+                E.Cast(castVec, Packets());
+            }
+        }
+
         //Get Nearest Enemy Hero around "unit"
         public static Obj_AI_Hero GetNearestEnemy(Obj_AI_Hero unit)
         {
@@ -2337,6 +2353,29 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 }
             }
         }
+
+        //private static void ObjSpellMissileOnOnCreate(GameObject sender, EventArgs args)
+        //{
+        //    if (!sender.IsValid || !(sender is Obj_SpellMissile))
+        //    {
+        //        return; //not sure if needed
+        //    }
+
+        //    var missile = (Obj_SpellMissile)sender;
+        //    var unit = missile.SpellCaster;
+        //    if (!unit.IsValid || (unit.Team == ObjectManager.Player.Team))
+        //    {
+        //        return;
+        //    }
+        //    var missilePosition = missile.Position.To2D();
+        //    var unitPosition = missile.StartPosition.To2D();
+        //    var endPos = missile.EndPosition.To2D();
+        //    if(Player.Distance(missile.Position) <= E.Range)
+        //    {
+        //                    castE(endPos);
+        //    }
+
+        //}
 
         private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
