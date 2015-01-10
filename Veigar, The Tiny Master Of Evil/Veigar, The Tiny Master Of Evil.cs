@@ -27,6 +27,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         private static Obj_AI_Hero Player;
         private static Obj_AI_Hero Target = null;
         private static Obj_AI_Hero WimmTarget = null;
+        private static Obj_AI_Hero WimmTargett = null;
         private static Int32 LastSkin;
         public static int Orb = 0;
         public static int ComboStarted = 0;
@@ -201,7 +202,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             sprite.Add();
             Game.OnGameUpdate += eventArgs =>
             {
-                if (sprite != null && Game.ClockTime >= 40)
+                if (sprite != null && Game.ClockTime >= 50)
                 {
                     sprite.Dispose();
                     sprite = null;
@@ -263,6 +264,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Keys").AddItem(new MenuItem("LastHitQ", "Last hit with Q[Hold]").SetValue(new KeyBind("I".ToCharArray()[0], KeyBindType.Press, false)));
             menu.SubMenu("Keys").AddItem(new MenuItem("LastHitWW", "Lane Clear with W").SetValue(new KeyBind("K".ToCharArray()[0], KeyBindType.Press, false)));
             menu.SubMenu("Keys").AddItem(new MenuItem("JungleActive", "Jungle Farm").SetValue(new KeyBind("H".ToCharArray()[0], KeyBindType.Press, false)));
+            menu.SubMenu("Keys").AddItem(new MenuItem("ExtraNeeded", "Show Extra/Needed Damage").SetValue(new KeyBind("N".ToCharArray()[0], KeyBindType.Toggle, true)));
             menu.SubMenu("Keys").AddItem(new MenuItem("InfoTable", "Show Info Table[FPS]").SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Toggle)));
 
             //Drawings menu:
@@ -281,7 +283,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Drawings").AddItem(new MenuItem("MinionMarker", "Mark Q Farm Minions").SetValue(new Circle(true, Color.Green)));
             menu.SubMenu("Drawings").AddItem(new MenuItem("TText", "Mark Targets with Circles").SetValue(true));
             menu.SubMenu("Drawings").AddItem(new MenuItem("LText", "Display Locked Target[HP BAR]").SetValue(true));
-            menu.SubMenu("Drawings").AddItem(new MenuItem("ExtraNeeded", "Show Extra/Needed Damage").SetValue(true));
             menu.SubMenu("Drawings").AddItem(new MenuItem("ExtraNeeded1", "Add HP bar indicator to E/N").SetValue(true));
             menu.SubMenu("Drawings").AddItem(new MenuItem("OptimalCombo", "Show Best Kill Combo[FPS]").SetValue(false));
 
@@ -298,8 +299,8 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             //Misc menu:
             menu.AddSubMenu(new Menu("Other", "Other"));
             menu.SubMenu("Other").AddSubMenu(new Menu("Auto W Settings", "wsets"));
-            menu.SubMenu("Other").SubMenu("wsets").AddItem(new MenuItem("Wimm", "Use W on CC'ed targets in range").SetValue(true));
-            //menu.SubMenu("Other").SubMenu("wsets").AddItem(new MenuItem("Wimmz", "Use W on Zhonyas").SetValue(true));
+            menu.SubMenu("Other").SubMenu("wsets").AddItem(new MenuItem("Wimm", "Enable Auto W on CC'ed targets").SetValue(true));
+            menu.SubMenu("Other").SubMenu("wsets").AddItem(new MenuItem("Wimmz", "Use W on invulnerability end").SetValue(true));
             menu.SubMenu("Other").SubMenu("wsets").AddItem(new MenuItem("DontWimm", "Disable Auto W when comboing").SetValue(true));
             menu.SubMenu("Other").AddItem(new MenuItem("StunUnderTower", "Stun Enemies Attacked by Tower").SetValue(true));
             menu.SubMenu("Other").AddItem(new MenuItem("UseInt", "Use E to Interrupt").SetValue(true));
@@ -311,6 +312,14 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Other").AddItem(new MenuItem("Show", "Display Sprite").SetValue(true));
             //menu.SubMenu("Other").AddItem(new MenuItem("skinch", "Use Custom Skin").SetValue(false));
             //menu.SubMenu("Other").AddItem(new MenuItem("skinechm", "Skin Changer").SetValue(new Slider(5, 1, 8)));
+
+            //Notifications
+            menu.AddSubMenu(new Menu("Notifications", "notes"));
+            menu.SubMenu("notes").AddItem(new MenuItem("noteactive", "Enable text notifications").SetValue(true));
+            menu.SubMenu("notes").AddItem(new MenuItem("notems", "Inform if your ms < target ms[combo]").SetValue(true));
+            menu.SubMenu("notes").AddItem(new MenuItem("notebuffs", "Inform if target has forbidden buffs").SetValue(false));
+            menu.SubMenu("notes").AddItem(new MenuItem("notetenacity", "Inform if E stun < W delay").SetValue(true));
+
 
             //Farm menu:
             menu.AddSubMenu(new Menu("Farm", "Farm"));
@@ -421,33 +430,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     Ccombo = null;
                 }
             }
-
-            if (Delayy != 0f)
-            {
-                //int I = Environment.TickCount;
-                //Drawing.DrawText(Player.HPBarPosition.X + 55, Player.HPBarPosition.Y + 50, System.Drawing.Color.LightGreen, "Combo:" + Ccombo + "(" + (Environment.TickCount - Delay1) + "/" + Delay + ")");
-                if (Ccombo.Contains("IGN"))
-                {
-                    int II = 0;
-                    if (Ccombo.Contains("E")) II += 200;
-                    if (Ccombo.Contains("W")) II += 1400;
-                    if (Ccombo.Contains("Q")) II += 600;
-                    if (Ccombo.Contains("R")) II += 600;
-                    if (Environment.TickCount - Delayy1 > II && Player.Spellbook.CanUseSpell(IgniteSlot) == SpellState.Ready)
-                    {
-                        Delayy = 0f;
-                        Delayy1 = 0f;
-                        Cccombo = null;
-                        II = 0;
-                    }
-                }
-                if (Environment.TickCount - Delayy1 > Delayy)
-                {
-                    Delayy = 0f;
-                    Delayy1 = 0f;
-                    Cccombo = null;
-                }
-            }
             #endregion
 
             #region OnUpdate
@@ -529,7 +511,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 NeededCD = manaCheck().Item2;
             }
 
-            if (menu.Item("ExtraNeeded").GetValue<bool>() || menu.Item("InfoTable").GetValue<KeyBind>().Active)
+            if (menu.Item("ExtraNeeded").GetValue<KeyBind>().Active)
             {
                 enemyDictionary = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).ToDictionary(enemy => enemy, enemy => GetExtraNeeded(enemy).Item1);
             }
@@ -562,14 +544,51 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 if (WimmTarget != null && !WimmTarget.HasBuff("VeigarStun") && !menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active)
                     W.Cast(WimmTarget);
             }
+            if (menu.Item("Wimm").GetValue<bool>() && menu.Item("Wimmz").GetValue<bool>())
+            {
+                WimmTargett = ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()).FirstOrDefault(m => m.IsValidTarget(E.Range) && m.Buffs.Where(b => b.IsActive && Game.Time < b.EndTime && b.Name == "zhonyasringshield").Aggregate(0f, (current, buff) => Math.Max(current, buff.EndTime)) - Game.Time < W.Delay);
+                if (WimmTargett != null && WimmTargett.Buffs.Where(b => b.Name == "zhonyasringshield").Aggregate(0f, (current, buff) => Math.Max(current, buff.EndTime)) - Game.Time > W.Delay - 1f)
+                {
+                    W.Cast(WimmTargett);
+                }
+            }
             #endregion
         }
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            //Drawing.DrawText(Player.HPBarPosition.X + 55, Player.HPBarPosition.Y + 25, System.Drawing.Color.LightGreen, "<font color='#FFFFFF'>RLY</font>");
+            //Drawing.DrawText(Player.HPBarPosition.X - 30, Player.HPBarPosition.Y + 10, System.Drawing.Color.Red, "E<W" + Player.PercentTenacityCharacterMod);
+
             //check if player is dead
             if (Player.IsDead) return;
+
+            if (menu.Item("noteactive").GetValue<bool>())
+            {
+                var y = 0f;
+                foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && enemy.IsValidTarget()))
+                {
+                    if (menu.Item("notebuffs").GetValue<bool>() && menu.Item("Combo").GetValue<KeyBind>().Active)
+                    {
+                        //Game.PrintChat("actually");
+                        if (HasBuffs(enemy))
+                        {
+                            foreach (var buff in buffList.Where(buff => enemy.HasBuff(buff.DisplayName) || enemy.HasBuff(buff.Name)))
+                            {
+                                Game.PrintChat("actually" + buff.MenuName);
+                                Drawing.DrawText(enemy.HPBarPosition.X + 9, enemy.HPBarPosition.Y + 37 + y, System.Drawing.Color.Red, "" + buff.MenuName);
+                                y += 11f;
+                            }
+                        }
+                    }
+                    if (menu.Item("notetenacity").GetValue<bool>())
+                    {
+                        if (!tenacitycheck(enemy))
+                        {
+                            Drawing.DrawText(enemy.HPBarPosition.X + 143, enemy.HPBarPosition.Y + 20, System.Drawing.Color.Red, "E<W");
+                        }
+                    }
+                }
+            }
 
             if (Target != null && Target.IsVisible)
             {
@@ -592,7 +611,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             }
 
             //Draw Extra or Needed for kill damage
-            if (menu.Item("ExtraNeeded").GetValue<bool>() || menu.Item("InfoTable").GetValue<KeyBind>().Active)
+            if (menu.Item("ExtraNeeded").GetValue<KeyBind>().Active)
             {
                 foreach (Obj_AI_Hero enemy in enemyDictionary.Keys)
                 {
@@ -917,6 +936,8 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 string TheCombo = null;
 
                 TheCombo = GetBestCombo(Target, "Comboing");
+
+                if (TheCombo != null && Target.MoveSpeed >= Player.MoveSpeed && menu.Item("notems").GetValue<bool>()) Drawing.DrawText(Player.HPBarPosition.X + 9, Player.HPBarPosition.Y + 37, System.Drawing.Color.LightGreen, Target.ChampionName + "" + "MS is higher" + "(" + Math.Round((Target.MoveSpeed - Player.MoveSpeed)) + ")");
 
                 if (TheCombo == "E+Q" && HasMana(true, false, true, false)) //E+Q
                     UseSpells(Target, "N", true, false, true, false, false, false);
@@ -2059,6 +2080,29 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             return time;
         }
 
+        //Tenacity and stun time check
+        public static bool tenacitycheck(Obj_AI_Hero target)
+        {
+            if (E.Level == 0 || W.Level == 0) return true;
+            if (Items.HasItem(3721, (Obj_AI_Hero)target) || Items.HasItem(3111, (Obj_AI_Hero)target) || Items.HasItem(3170, (Obj_AI_Hero)target) || Items.HasItem(3172, (Obj_AI_Hero)target))
+            {
+                var time = 1.5f + 0.25f * E.Level - 0.25f;
+                time = time * 0.75f;
+                if (time < W.Delay)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                return true;
+            }
+        }
+
         //Returns how much more damage you need to deal to the target to ensure the kill OR how much you will overdamage to them
         private static Tuple<int, string> GetExtraNeeded(Obj_AI_Hero target)
         {
@@ -2370,9 +2414,9 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         //    var missilePosition = missile.Position.To2D();
         //    var unitPosition = missile.StartPosition.To2D();
         //    var endPos = missile.EndPosition.To2D();
-        //    if(Player.Distance(missile.Position) <= E.Range)
+        //    if (Player.Distance(missile.Position) <= E.Range)
         //    {
-        //                    castE(endPos);
+        //        castE(endPos);
         //    }
 
         //}
