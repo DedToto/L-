@@ -492,6 +492,19 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     {
                         castE(GetNearestEnemy(Player));
                     }
+                    if (E.IsReady())
+                    {
+                        var targets = ObjectManager.Get<Obj_AI_Hero>().Where(h => h.IsValidTarget(E.Range + E.Width / 2)).OrderBy(h => h.Distance(Player, true));
+
+                        if (targets.Count() > 0)
+                        {
+                            foreach (var target in targets)
+                            {
+                                castE(target);
+                            }
+                        }
+                    }
+                    if (Player.ServerPosition.Distance(Game.CursorPos) > 80 && !KeMinimap.Minimap.MouseOver) Player.IssueOrder(GameObjectOrder.MoveTo, point);
                 }
             }
             else
