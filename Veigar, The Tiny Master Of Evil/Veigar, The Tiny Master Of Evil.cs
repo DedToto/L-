@@ -12,7 +12,6 @@ using SharpDX;
 using xSLx_Orbwalker;
 using Veigar__The_Tiny_Master_Of_Evil.Properties;
 using KeMinimap;
-using LeagueSharp.Network.Packets;
 #endregion
 
 namespace Veigar__The_Tiny_Master_Of_Evil
