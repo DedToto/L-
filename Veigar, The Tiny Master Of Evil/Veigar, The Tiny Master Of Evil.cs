@@ -486,11 +486,11 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
                 if (menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active)
                 {
-                    if (Player.ServerPosition.Distance(Game.CursorPos) > 55 && !KeMinimap.Minimap.MouseOver) Player.IssueOrder(GameObjectOrder.MoveTo, point);
-                    if (E.IsReady())
-                    {
-                        castE(GetNearestEnemy(Player));
-                    }
+                    //if (Player.ServerPosition.Distance(Game.CursorPos) > 55 && !KeMinimap.Minimap.MouseOver) Player.IssueOrder(GameObjectOrder.MoveTo, point);
+                    //if (E.IsReady())
+                    //{
+                    //    castE(GetNearestEnemy(Player));
+                    //}
                     if (E.IsReady())
                     {
                         var targets = ObjectManager.Get<Obj_AI_Hero>().Where(h => h.IsValidTarget(E.Range + E.Width / 2)).OrderBy(h => h.Distance(Player, true));
