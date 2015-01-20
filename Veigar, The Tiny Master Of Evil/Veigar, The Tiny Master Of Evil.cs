@@ -11,7 +11,7 @@ using LeagueSharp.Common;
 using SharpDX;
 using xSLx_Orbwalker;
 using Veigar__The_Tiny_Master_Of_Evil.Properties;
-using KeMinimap;
+//using KeMinimap;
 #endregion
 
 namespace Veigar__The_Tiny_Master_Of_Evil
@@ -2158,7 +2158,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             if (menu.Item("LockTargets").GetValue<bool>())
             {
                 foreach (var objAiHero in from hero in ObjectManager.Get<Obj_AI_Hero>()
-                                          where hero.IsValidTarget() && !KeMinimap.Minimap.MouseOver
+                                          where hero.IsValidTarget()
                                           select hero
                                               into h
                                               orderby h.Distance(Game.CursorPos) descending
