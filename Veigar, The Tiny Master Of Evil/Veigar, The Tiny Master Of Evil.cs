@@ -27,7 +27,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         private static Obj_AI_Hero Target = null;
         private static Obj_AI_Hero WimmTarget = null;
         private static Obj_AI_Hero WimmTargett = null;
-        private static Int32 LastSkin;
+        //private static Int32 LastSkin;
         public static int Orb = 0;
         public static int ComboStarted = 0;
         public static float Delay = 0f;
@@ -503,7 +503,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                             }
                         }
                     }
-                    if (Player.ServerPosition.Distance(Game.CursorPos) > 80 && !KeMinimap.Minimap.MouseOver) Player.IssueOrder(GameObjectOrder.MoveTo, point);
+                    if (Player.ServerPosition.Distance(Game.CursorPos) > 80) Player.IssueOrder(GameObjectOrder.MoveTo, point);
                 }
             }
             else
@@ -2059,9 +2059,9 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 x++;
             if (D && R.Level == 0)
                 x++;
-            if (EE && DFGSlot == null)
+            if (EE && DFGSlot == SpellSlot.Unknown)
                 x++;
-            if (F && IgniteSlot == null)
+            if (F && IgniteSlot == SpellSlot.Unknown)
                 x++;
 
             if (x > 0) return false;
