@@ -2333,7 +2333,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         {
             if (Player.HasBuff("summonerdot") || Player.HasBuff("MordekaiserChildrenOfTheGrave"))
             {
-                if (!Utility.InFountain())
+                if (!Utility.InFountain(Player))
 
                     if (Items.HasItem(biscuit.Id) && Items.CanUseItem(biscuit.Id) && !Player.HasBuff("ItemMiniRegenPotion"))
                     {
@@ -2353,7 +2353,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         //Buys listed items(Gets called once in a game in fountain when you have 475 gold)
         public static void BuyItems()
         {
-            if (Utility.InFountain() && ObjectManager.Player.Gold == 475 && !boughtItemOne)
+            if (Utility.InFountain(Player) && ObjectManager.Player.Gold == 475 && !boughtItemOne)
             {
                 ObjectManager.Player.BuyItem(LeagueSharp.ItemId.Warding_Totem_Trinket);
                 ObjectManager.Player.BuyItem(LeagueSharp.ItemId.Faerie_Charm);
