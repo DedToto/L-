@@ -165,10 +165,8 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         private static Dictionary<Obj_AI_Hero, int> enemyDictionary = new Dictionary<Obj_AI_Hero, int>();
         private static Dictionary<Obj_AI_Hero, string> enemyDictionary1 = new Dictionary<Obj_AI_Hero, string>();
 
-        //DFG and Ignite
-        public static Items.Item Dfg;
+        //Ignite
         public static SpellSlot IgniteSlot;
-        public static SpellSlot DFGSlot;
 
         //Items
         public static Items.Item biscuit = new Items.Item(2010, 10);
@@ -231,12 +229,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             SpellList.Add(R);
 
             IgniteSlot = Player.GetSpellSlot("SummonerDot");
-            DFGSlot = Player.GetSpellSlot("Deathfire_Grasp");
-
-            Dfg = Utility.Map.GetMap().Type == Utility.Map.MapType.TwistedTreeline ||
-                  Utility.Map.GetMap().Type == Utility.Map.MapType.CrystalScar
-                ? new Items.Item(3188, 750)
-                : new Items.Item(3128, 750);
 
             //Menu
             menu = new Menu(ChampionName, ChampionName, true);
@@ -339,7 +331,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("AutoKS").AddItem(new MenuItem("UseQKS", "Use Q").SetValue(true));
             menu.SubMenu("AutoKS").AddItem(new MenuItem("UseWKS", "Use W").SetValue(false));
             menu.SubMenu("AutoKS").AddItem(new MenuItem("UseRKS", "Use R").SetValue(false));
-            menu.SubMenu("AutoKS").AddItem(new MenuItem("UseDFGKS", "Use DFG").SetValue(false));
             menu.SubMenu("AutoKS").AddItem(new MenuItem("UseIGNKS", "Use IGN").SetValue(false));
             menu.SubMenu("AutoKS").AddItem(new MenuItem("DisableKS", "Disable KS when using combos").SetValue(false));
             menu.SubMenu("AutoKS").AddItem(new MenuItem("AutoKST", "AutoKS (toggle)!").SetValue(new KeyBind("U".ToCharArray()[0], KeyBindType.Toggle, true)));
@@ -358,7 +349,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Combo").AddSubMenu(new Menu("Smart Combo Settings", "MainCombo"));
             menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("If combo requires successful W hit").AddItem(new MenuItem("ComboWaitMode", "Choosed Mode:").SetValue(new StringList(new[] { "Wait for W to land first", "Don't wait for W to land", }, 0)));
             menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("If combo requires successful W hit").AddItem(new MenuItem("IgnoreQ", "Allow Q Cast without W Check").SetValue(false));
-            menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("If combo requires successful W hit").AddItem(new MenuItem("IgnoreDFG", "Allow DFG Cast without W Check").SetValue(false));
             menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("If combo requires successful W hit").AddItem(new MenuItem("IgnoreR", "Allow R Cast without W Check").SetValue(false));
             menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("If combo requires successful W hit").AddItem(new MenuItem("IgnoreIGN", "Allow IGN Cast without W Check").SetValue(false));
 
@@ -369,9 +359,9 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.SubMenu("Combo").SubMenu("MainCombo").AddSubMenu(new Menu("Ignore List", "il"));
             foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != Player.Team))
                 menu.SubMenu("Combo").SubMenu("MainCombo").SubMenu("il").AddItem(new MenuItem("il" + enemy.BaseSkinName, enemy.BaseSkinName).SetValue(false));
-            menu.SubMenu("Combo").SubMenu("MainCombo").AddItem(new MenuItem("Priority", "Saving priority").SetValue(new StringList(new[] { "IGN > R > DFG", "R > IGN > DFG", "R > DFG > IGN" }, 0)));
+            menu.SubMenu("Combo").SubMenu("MainCombo").AddItem(new MenuItem("Priority", "Saving priority").SetValue(new StringList(new[] { "IGN > R", "R > IGN" }, 0)));
             menu.SubMenu("Combo").SubMenu("MainCombo").AddItem(new MenuItem("ComboMode", "Combo config for unkillable targets").SetValue(new StringList(new[] { "None", "Choosed Harass Mode", "Q", "E+W", "E+W+Q", }, 0)));
-            menu.SubMenu("Combo").AddSubMenu(new Menu("Dont use R,IGN,DFG if target has", "DontRIGN"));
+            menu.SubMenu("Combo").AddSubMenu(new Menu("Dont use R,IGN if target has", "DontRIGN"));
             foreach (var buff in buffList)
                 menu.SubMenu("Combo").SubMenu("DontRIGN").AddItem(new MenuItem("dont" + buff.Name, buff.MenuName).SetValue(true));
             foreach (var buff in IgnoreList.Where(buff => buff.MenuName != "Sivir Shield" && buff.MenuName != "Fizz E" && buff.MenuName != "Vladimir W"))
@@ -540,11 +530,11 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("dontfarm").GetValue<bool>()) return;
                 if (menu.Item("OnlySiege").GetValue<bool>())
                 {
-                    _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.BaseSkinName.Contains("Siege") && m.Health < ((Player.GetSpellDamage(m, SpellSlot.Q) - 30)) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
+                    _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.BaseSkinName.Contains("Siege") && m.Health < ((Player.GetSpellDamage(m, SpellSlot.Q))) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
                 }
                 else
                 {
-                    _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < ((Player.GetSpellDamage(m, SpellSlot.Q) - 30)) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
+                    _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < ((Player.GetSpellDamage(m, SpellSlot.Q))) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
                 }
                 lastHit();
                 if (menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 2 || menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 3) if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
@@ -654,7 +644,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                                 hpBarPos.X += 45;
                                 hpBarPos.Y += 18;
 
-                                var combodamage = GetComboDamage(enemy, "Cunts", true, true, true, true, true, true);
+                                var combodamage = GetComboDamage(enemy, "Cunts", true, true, true, true, true);
 
                                 var PercentHPleftAfterCombo = (enemy.Health - combodamage) / enemy.MaxHealth;
                                 var PercentHPleft = enemy.Health / enemy.MaxHealth;
@@ -690,7 +680,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                                 hpBarPos.X += 45;
                                 hpBarPos.Y += 18;
 
-                                var combodamage = GetComboDamage(enemy, "Cunts", true, true, true, true, true, true);
+                                var combodamage = GetComboDamage(enemy, "Cunts", true, true, true, true, true);
 
                                 var PercentHPleftAfterCombo = (enemy.Health - combodamage) / enemy.MaxHealth;
                                 var PercentHPleft = enemy.Health / enemy.MaxHealth;
@@ -852,62 +842,61 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         private static void AutoKS()
         {
             if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("DisableKS").GetValue<bool>()) return;
-            foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && !enemy.IsDead && enemy.IsValidTarget() && Player.Distance(enemy.Position) <= NeededRange(menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseRKS").GetValue<bool>(), menu.Item("UseDFGKS").GetValue<bool>(), menu.Item("UseIGNKS").GetValue<bool>()) && Player.Distance(enemy.Position) <= E.Range))
+            foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy && !enemy.IsDead && enemy.IsValidTarget() && Player.Distance(enemy.Position) <= NeededRange(menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), menu.Item("UseRKS").GetValue<bool>(), menu.Item("UseIGNKS").GetValue<bool>()) && Player.Distance(enemy.Position) <= E.Range))
             {
-                if (GetComboDamage(enemy, "Cunts", true, false, false, false, false, false) > enemy.Health && menu.Item("UseQKS").GetValue<bool>())
+                if (GetComboDamage(enemy, "Cunts", true, false, false, false, false) > enemy.Health && menu.Item("UseQKS").GetValue<bool>())
                 {
                     if (HasMana(true, false, false, false))
                     {
-                        UseSpells(enemy, "Source", true, false, false, false, false, false);
+                        UseSpells(enemy, "Source", true, false, false, false, false);
                     }
                 }
-                else if (GetComboDamage(enemy, "Cunts", false, true, false, false, false, false) > enemy.Health && menu.Item("UseWKS").GetValue<bool>())
+                else if (GetComboDamage(enemy, "Cunts", false, true, false, false, false) > enemy.Health && menu.Item("UseWKS").GetValue<bool>())
                 {
                     if (HasMana(false, true, false, false))
                     {
-                        UseSpells(enemy, "NE", false, true, false, false, false, false);
+                        UseSpells(enemy, "NE", false, true, false, false, false);
                     }
                 }
-                else if (GetComboDamage(enemy, "Cunts", true, false, false, false, true, false) > enemy.Health && menu.Item("UseQKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>())
+                else if (GetComboDamage(enemy, "Cunts", true, false, false, false, false) > enemy.Health && menu.Item("UseQKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>())
                 {
                     if (HasMana(true, false, false, false))
                     {
-                        UseSpells(enemy, "Source", true, false, false, false, true, false);
+                        UseSpells(enemy, "Source", true, false, false, false, false);
                     }
                 }
-                else if (GetComboDamage(enemy, "Cunts", false, false, false, true, false, false) > enemy.Health && menu.Item("UseRKS").GetValue<bool>())
+                else if (GetComboDamage(enemy, "Cunts", false, false, false, true, false) > enemy.Health && menu.Item("UseRKS").GetValue<bool>())
                 {
                     if (HasMana(false, false, false, true))
                     {
-                        UseSpells(enemy, "Source", false, false, false, true, false, false);
+                        UseSpells(enemy, "Source", false, false, false, true, false);
                     }
                 }
-                else if (GetComboDamage(enemy, "Cunts", false, false, false, true, true, false) > enemy.Health && menu.Item("UseRKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>())
+                else if (GetComboDamage(enemy, "Cunts", false, false, false, true, false) > enemy.Health && menu.Item("UseRKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>())
                 {
                     if (HasMana(false, false, false, true))
                     {
-                        UseSpells(enemy, "Source", true, false, false, false, false, false);
+                        UseSpells(enemy, "Source", true, false, false, false, false);
                     }
                 }
-                else if (GetComboDamage(enemy, "Cunts", false, false, false, false, false, true) > enemy.Health && menu.Item("UseIGNKS").GetValue<bool>())
+                else if (GetComboDamage(enemy, "Cunts", false, false, false, false, true) > enemy.Health && menu.Item("UseIGNKS").GetValue<bool>())
                 {
-                    UseSpells(enemy, "Source", false, false, false, false, false, true);
+                    UseSpells(enemy, "Source", false, false, false, false, true);
                 }
-                else if (GetComboDamage(enemy, "Cunts", menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), false, menu.Item("UseRKS").GetValue<bool>(), menu.Item("UseDFGKS").GetValue<bool>(), menu.Item("UseIGNKS").GetValue<bool>()) > enemy.Health)
+                else if (GetComboDamage(enemy, "Cunts", menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), false, menu.Item("UseRKS").GetValue<bool>(), menu.Item("UseIGNKS").GetValue<bool>()) > enemy.Health)
                 {
-                    UseSpells(enemy, "Source", menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), false, menu.Item("UseRKS").GetValue<bool>(), menu.Item("UseDFGKS").GetValue<bool>(), menu.Item("UseIGNKS").GetValue<bool>());
+                    UseSpells(enemy, "Source", menu.Item("UseQKS").GetValue<bool>(), menu.Item("UseWKS").GetValue<bool>(), false, menu.Item("UseRKS").GetValue<bool>(), menu.Item("UseIGNKS").GetValue<bool>());
                 }
             }
         }
 
-        private static int NeededRange(bool A, bool B, bool C, bool D, bool EEE, bool F)
+        private static int NeededRange(bool A, bool B, bool C, bool D, bool F)
         {
-            bool AR = Exists(true, false, false, false, false, false);
-            bool BR = Exists(false, true, false, false, false, false);
-            bool CR = Exists(false, false, true, false, false, false);
-            bool DR = Exists(false, false, false, true, false, false);
-            bool ER = Exists(false, false, false, true, true, false);
-            bool FR = Exists(false, false, false, false, false, true);
+            bool AR = Exists(true, false, false, false, false);
+            bool BR = Exists(false, true, false, false, false);
+            bool CR = Exists(false, false, true, false, false);
+            bool DR = Exists(false, false, false, true, false);
+            bool FR = Exists(false, false, false, false, true);
 
             int NeededRangee = 0;
             if (F && FR)
@@ -916,8 +905,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 NeededRangee = 650;
             else if (A && AR)
                 NeededRangee = 650;
-            else if (EEE && ER)
-                NeededRangee = 750;
             else if (B && BR)
                 NeededRangee = 900;
             else if (C && CR)
@@ -928,16 +915,16 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         //Harass Combo(Independent of CD and target HP)
         private static void Harass()
         {
-            if (menu.Item("HarassMode").GetValue<StringList>().SelectedIndex == 0) UseSpells(Target, "EWQHarass", true, true, true, false, false, false);
-            else if (menu.Item("HarassMode").GetValue<StringList>().SelectedIndex == 1) UseSpells(Target, "EWHarass", false, true, true, false, false, false);
-            else if (menu.Item("HarassMode").GetValue<StringList>().SelectedIndex == 2) UseSpells(Target, "QHarass", true, false, false, false, false, false);
+            if (menu.Item("HarassMode").GetValue<StringList>().SelectedIndex == 0) UseSpells(Target, "EWQHarass", true, true, true, false, false);
+            else if (menu.Item("HarassMode").GetValue<StringList>().SelectedIndex == 1) UseSpells(Target, "EWHarass", false, true, true, false, false);
+            else if (menu.Item("HarassMode").GetValue<StringList>().SelectedIndex == 2) UseSpells(Target, "QHarass", true, false, false, false, false);
         }
 
         //Use All Available Spells Combo(Independent of CD and target HP)
         private static void AllIn()
         {
             if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
-            UseSpells(Target, "AllIn", true, true, true, true, true, true);
+            UseSpells(Target, "AllIn", true, true, true, true, true);
         }
 
         //The Main Smart Combo that chooses the most efficient combo that will ensure the kill
@@ -952,74 +939,74 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 if (TheCombo != null && Target.MoveSpeed >= Player.MoveSpeed && menu.Item("notems").GetValue<bool>()) Drawing.DrawText(Player.HPBarPosition.X + 9, Player.HPBarPosition.Y + 37, System.Drawing.Color.LightGreen, Target.ChampionName + "" + "MS is higher" + "(" + Math.Round((Target.MoveSpeed - Player.MoveSpeed)) + ")");
 
                 if (TheCombo == "E+Q" && HasMana(true, false, true, false)) //E+Q
-                    UseSpells(Target, "N", true, false, true, false, false, false);
+                    UseSpells(Target, "N", true, false, true, false, false);
                 else if (TheCombo == "Q" && HasMana(true, false, false, false)) //Q
-                    UseSpells(Target, "N", true, false, false, false, false, false);
+                    UseSpells(Target, "N", true, false, false, false, false);
                 else if (TheCombo == "E+W" && HasMana(false, true, true, false)) //E+W
-                    UseSpells(Target, "NE", false, true, true, false, false, false);
+                    UseSpells(Target, "NE", false, true, true, false, false);
                 else if (TheCombo == "W" && HasMana(false, true, false, false)) //W
-                    UseSpells(Target, "NE", false, true, false, false, false, false);
+                    UseSpells(Target, "NE", false, true, false, false, false);
                 else if (TheCombo == "E+W+Q" && HasMana(true, true, true, false)) //E+W+Q
-                    UseSpells(Target, "NE", true, true, true, false, false, false);
+                    UseSpells(Target, "NE", true, true, true, false, false);
                 else if (TheCombo == "|DFG|E+W+Q" && HasMana(true, true, true, false)) //DFG+E+W+Q
-                    UseSpells(Target, "NE", true, true, true, false, true, false);
+                    UseSpells(Target, "NE", true, true, true, false, false);
                 else if (TheCombo == "|DFG|E+W" && HasMana(false, true, true, false)) //DFG+E+W
-                    UseSpells(Target, "NE", false, true, true, false, true, false);
+                    UseSpells(Target, "NE", false, true, true, false, false);
                 else if (TheCombo == "|DFG|Q" && HasMana(true, false, false, false)) //DFG+Q
-                    UseSpells(Target, "N", true, false, false, false, true, false);
+                    UseSpells(Target, "N", true, false, false, false, false);
                 else if (TheCombo == "E+W+R" && HasMana(false, true, true, true)) //E+W+R
-                    UseSpells(Target, "NE", false, true, true, true, false, false);
+                    UseSpells(Target, "NE", false, true, true, true, false);
                 else if (TheCombo == "E+W+R+Q" && HasMana(true, true, true, true)) //E+W+R+Q
-                    UseSpells(Target, "NE", true, true, true, true, false, false);
+                    UseSpells(Target, "NE", true, true, true, true, false);
                 else if (TheCombo == "E+R" && HasMana(false, false, true, true)) //E+R
-                    UseSpells(Target, "N", false, false, true, true, false, false);
+                    UseSpells(Target, "N", false, false, true, true, false);
                 else if (TheCombo == "R" && HasMana(false, false, false, true)) //R
-                    UseSpells(Target, "N", false, false, false, true, false, false);
+                    UseSpells(Target, "N", false, false, false, true, false);
                 else if (TheCombo == "|DFG|E+R+Q" && HasMana(true, false, true, true)) //DFG+E+R+Q
-                    UseSpells(Target, "N", true, false, true, true, true, false);
+                    UseSpells(Target, "N", true, false, true, true, false);
                 else if (TheCombo == "|DFG|E+W+R" && HasMana(false, true, true, true)) //DFG+E+W+R
-                    UseSpells(Target, "NE", false, true, true, true, true, false);
+                    UseSpells(Target, "NE", false, true, true, true, false);
                 else if (TheCombo == "|DFG|E+W+R+Q" && HasMana(true, true, true, true)) //DFG+E+W+R+Q
-                    UseSpells(Target, "NE", true, true, true, true, true, false);
+                    UseSpells(Target, "NE", true, true, true, true, false);
                 else if (TheCombo == "|DFG|R" && HasMana(false, false, false, true)) //DFG+R
-                    UseSpells(Target, "N", false, false, false, true, true, false);
+                    UseSpells(Target, "N", false, false, false, true, false);
                 else if (TheCombo == "E+Q+IGN" && HasMana(true, false, true, false)) //E+Q+IGN
-                    UseSpells(Target, "N", true, false, true, false, false, true);
+                    UseSpells(Target, "N", true, false, true, false, true);
                 else if (TheCombo == "E+W+IGN" && HasMana(false, true, true, false)) //E+W+IGN
-                    UseSpells(Target, "NE", false, true, true, false, false, true);
+                    UseSpells(Target, "NE", false, true, true, false, true);
                 else if (TheCombo == "E+W+Q+IGN" && HasMana(true, true, true, false)) //E+W+Q+IGN
-                    UseSpells(Target, "NE", true, true, true, false, false, true);
+                    UseSpells(Target, "NE", true, true, true, false, true);
                 else if (TheCombo == "E+W+R+Q+IGN" && HasMana(true, true, true, true)) //E+W+R+Q+IGN
-                    UseSpells(Target, "NE", true, true, true, true, false, true);
+                    UseSpells(Target, "NE", true, true, true, true, true);
                 else if (TheCombo == "|DFG|E+Q+IGN" && HasMana(true, false, true, false)) //DFG+E+Q+IGN
-                    UseSpells(Target, "N", true, false, true, false, true, true);
+                    UseSpells(Target, "N", true, false, true, false, true);
                 else if (TheCombo == "|DFG|E+W+IGN" && HasMana(false, true, true, false)) //DFG+E+W+IGN
-                    UseSpells(Target, "NE", false, true, true, false, true, true);
+                    UseSpells(Target, "NE", false, true, true, false, true);
                 else if (TheCombo == "|DFG|E+W+Q+IGN" && HasMana(true, true, true, false)) //DFG+E+W+Q+IGN
-                    UseSpells(Target, "NE", true, true, true, false, true, true);
+                    UseSpells(Target, "NE", true, true, true, false, true);
                 else if (TheCombo == "|DFG|E+W+R+Q+IGN" && HasMana(true, true, true, true)) //DFG+E+W+R+Q+IGN
-                    UseSpells(Target, "NE", true, true, true, true, true, true);
+                    UseSpells(Target, "NE", true, true, true, true, true);
                 else if (TheCombo == "IGN" && HasMana(false, false, false, false)) //IGN
-                    UseSpells(Target, "N", false, false, false, false, false, true);
+                    UseSpells(Target, "N", false, false, false, false, true);
                 else if (TheCombo == "Unkillable" && HasMana(false, false, false, false)) //Unkillable
                     if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 0)
                         return;
                     else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 1)
                         Harass();
                     else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 2)
-                        UseSpells(Target, "N", true, false, false, false, false, false);
+                        UseSpells(Target, "N", true, false, false, false, false);
                     else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 3)
-                        UseSpells(Target, "NE", false, true, true, false, false, false);
+                        UseSpells(Target, "NE", false, true, true, false, false);
                     else if (menu.Item("ComboMode").GetValue<StringList>().SelectedIndex == 4)
-                        UseSpells(Target, "NE", true, true, true, false, false, false);
+                        UseSpells(Target, "NE", true, true, true, false, false);
             }
         }
 
         //Uses selected abilities
-        private static void UseSpells(Obj_AI_Hero T, string Source, bool QQ, bool WW, bool EE, bool RR, bool DFGG, bool IGNN)
+        private static void UseSpells(Obj_AI_Hero T, string Source, bool QQ, bool WW, bool EE, bool RR, bool IGNN)
         {
 
-            if (Player.Distance(T, true) < Math.Pow(NeededRange(QQ, WW, EE, RR, DFGG, IGNN), 2) && Player.Distance(T, true) > Math.Pow(NeededRange(QQ, WW, EE, RR, DFGG, IGNN), 2)) ObjectManager.Player.IssueOrder(GameObjectOrder.MoveTo, T);
+            if (Player.Distance(T, true) < Math.Pow(NeededRange(QQ, WW, EE, RR, IGNN), 2) && Player.Distance(T, true) > Math.Pow(NeededRange(QQ, WW, EE, RR, IGNN), 2)) ObjectManager.Player.IssueOrder(GameObjectOrder.MoveTo, T);
 
             if (menu.Item("CastMode").GetValue<StringList>().SelectedIndex == 0)
             {
@@ -1086,31 +1073,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                             }
                         }
                     }
-                }
-            }
-
-            if (DFGG && T != null)
-            {
-                if (Dfg.IsReady() && !HasBuffs(T) && DetectCollision(T, 0f))
-                {
-                    if (Source == "NE" && menu.Item("ComboWaitMode").GetValue<StringList>().SelectedIndex == 0)
-                    {
-                        if (menu.Item("CastMode").GetValue<StringList>().SelectedIndex == 0)
-                        {
-                            if (menu.Item("IgnoreDFG").GetValue<bool>() || !W.IsReady())
-                                Items.UseItem(Dfg.Id, T);
-                        }
-                        else
-                        {
-                            if (T.Buffs.Where(b => b.IsActive && Game.Time < b.EndTime && (b.Type == BuffType.Charm || b.Type == BuffType.Knockback || b.Type == BuffType.Stun || b.Type == BuffType.Suppression || b.Type == BuffType.Snare)).Aggregate(0f, (current, buff) => Math.Max(current, buff.EndTime)) - Game.Time >= W.Delay)
-                                Items.UseItem(Dfg.Id, T);
-                        }
-                    }
-                    else
-                    {
-                        Items.UseItem(Dfg.Id, T);
-                    }
-
                 }
             }
 
@@ -1205,35 +1167,35 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
             var op = menu.Item("op" + x.BaseSkinName).GetValue<Slider>().Value * .01 + 1;
 
-            if (GetComboDamage(x, Source, true, false, true, false, false, false) > x.Health * op) //E+Q
+            if (GetComboDamage(x, Source, true, false, true, false, false) > x.Health * op) //E+Q
             {
                 if (HasMana(true, false, true, false))
                 {
                     BestCombo = "E+Q";
                 }
             }
-            else if (GetComboDamage(x, Source, true, false, false, false, false, false) > x.Health * op) //Q
+            else if (GetComboDamage(x, Source, true, false, false, false, false) > x.Health * op) //Q
             {
                 if (HasMana(true, false, false, false))
                 {
                     BestCombo = "Q";
                 }
             }
-            else if (GetComboDamage(x, Source, false, true, true, false, false, false) > x.Health * op) //E+W
+            else if (GetComboDamage(x, Source, false, true, true, false, false) > x.Health * op) //E+W
             {
                 if (HasMana(false, true, true, false))
                 {
                     BestCombo = "E+W";
                 }
             }
-            else if (GetComboDamage(x, Source, false, true, false, false, false, false) > x.Health * op) //W
+            else if (GetComboDamage(x, Source, false, true, false, false, false) > x.Health * op) //W
             {
                 if (HasMana(false, true, false, false))
                 {
                     BestCombo = "W";
                 }
             }
-            else if (GetComboDamage(x, Source, true, true, true, false, false, false) > x.Health * op) //E+W+Q
+            else if (GetComboDamage(x, Source, true, true, true, false, false) > x.Health * op) //E+W+Q
             {
                 if (HasMana(true, true, true, false))
                 {
@@ -1242,140 +1204,63 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             }
             if (menu.Item("Priority").GetValue<StringList>().SelectedIndex == 0)
             {
-                if (GetComboDamage(x, Source, true, true, true, false, true, false) > x.Health * op) //DFG+E+W+Q
-                {
-                    if (HasMana(true, true, true, false))
-                    {
-                        BestCombo = "|DFG|E+W+Q";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, true, true, false, true, false) > x.Health * op) //DFG+E+W
-                {
-                    if (HasMana(false, true, true, false))
-                    {
-                        BestCombo = "|DFG|E+W";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, false, false, false, true, false) > x.Health * op) //DFG+Q
-                {
-                    if (HasMana(true, false, false, false))
-                    {
-                        BestCombo = "|DFG|Q";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, true, true, true, false, false) > x.Health * op) //E+W+R
+                if (GetComboDamage(x, Source, false, true, true, true, false) > x.Health * op) //E+W+R
                 {
                     if (HasMana(false, true, true, true))
                     {
                         BestCombo = "E+W+R";
                     }
                 }
-                else if (GetComboDamage(x, Source, true, true, true, true, false, false) > x.Health * op) //E+W+R+Q
+                else if (GetComboDamage(x, Source, true, true, true, true, false) > x.Health * op) //E+W+R+Q
                 {
                     if (HasMana(true, true, true, true))
                     {
                         BestCombo = "E+W+R+Q";
                     }
                 }
-                else if (GetComboDamage(x, Source, false, false, true, true, false, false) > x.Health * op) //E+R
+                else if (GetComboDamage(x, Source, false, false, true, true, false) > x.Health * op) //E+R
                 {
                     if (HasMana(false, false, true, true))
                     {
                         BestCombo = "E+R";
                     }
                 }
-                else if (GetComboDamage(x, Source, false, false, false, true, false, false) > x.Health * op) //R
+                else if (GetComboDamage(x, Source, false, false, false, true, false) > x.Health * op) //R
                 {
                     if (HasMana(false, false, false, true))
                     {
                         BestCombo = "R";
                     }
                 }
-                else if (GetComboDamage(x, Source, true, false, true, true, true, false) > x.Health * op) //DFG+E+R+Q
-                {
-                    if (HasMana(true, false, true, true))
-                    {
-                        BestCombo = "|DFG|E+R+Q";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, true, true, true, true, false) > x.Health * op) //DFG+E+W+R
-                {
-                    if (HasMana(false, true, true, true))
-                    {
-                        BestCombo = "|DFG|E+W+R";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, true, true, false) > x.Health * op) //DFG+E+W+R+Q
-                {
-                    if (HasMana(true, true, true, true))
-                    {
-                        BestCombo = "|DFG|E+W+R+Q";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, false, false, true, true, false) > x.Health * op) //DFG+R
-                {
-                    if (HasMana(false, false, false, true))
-                    {
-                        BestCombo = "|DFG|R";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, false, true, false, false, true) > x.Health * op) //E+Q+IGN
+                else if (GetComboDamage(x, Source, true, false, true, false, true) > x.Health * op) //E+Q+IGN
                 {
                     if (HasMana(true, false, true, false))
                     {
                         BestCombo = "E+Q+IGN";
                     }
                 }
-                else if (GetComboDamage(x, Source, false, true, true, false, false, true) > x.Health * op) //E+W+IGN
+                else if (GetComboDamage(x, Source, false, true, true, false, true) > x.Health * op) //E+W+IGN
                 {
                     if (HasMana(false, true, true, false))
                     {
                         BestCombo = "E+W+IGN";
                     }
                 }
-                else if (GetComboDamage(x, Source, true, true, true, false, false, true) > x.Health * op) //E+W+Q+IGN
+                else if (GetComboDamage(x, Source, true, true, true, false, true) > x.Health * op) //E+W+Q+IGN
                 {
                     if (HasMana(true, true, true, false))
                     {
                         BestCombo = "E+W+Q+IGN";
                     }
                 }
-                else if (GetComboDamage(x, Source, true, true, true, true, false, true) > x.Health * op) //E+W+R+Q+IGN
+                else if (GetComboDamage(x, Source, true, true, true, true, true) > x.Health * op) //E+W+R+Q+IGN
                 {
                     if (HasMana(true, true, true, true))
                     {
                         BestCombo = "E+W+R+Q+IGN";
                     }
                 }
-                else if (GetComboDamage(x, Source, true, false, true, false, true, true) > x.Health * op) //DFG+E+Q+IGN
-                {
-                    if (HasMana(true, false, true, false))
-                    {
-                        BestCombo = "|DFG|E+Q+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, true, true, false, true, true) > x.Health * op) //DFG+E+W+IGN
-                {
-                    if (HasMana(false, true, true, false))
-                    {
-                        BestCombo = "|DFG|E+W+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, false, true, true) > x.Health * op) //DFG+E+W+Q+IGN
-                {
-                    if (HasMana(true, true, true, false))
-                    {
-                        BestCombo = "|DFG|E+W+Q+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, true, true, true) > x.Health * op) //DFG+E+W+R+Q+IGN
-                {
-                    if (HasMana(true, true, true, true))
-                    {
-                        BestCombo = "|DFG|E+W+R+Q+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, false, false, false, false, true) > x.Health * op)  //IGN
+                else if (GetComboDamage(x, Source, false, false, false, false, true) > x.Health * op)  //IGN
                 {
                     if (HasMana(false, false, false, false))
                     {
@@ -1385,287 +1270,67 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             }
             else if (menu.Item("Priority").GetValue<StringList>().SelectedIndex == 1)
             {
-                if (GetComboDamage(x, Source, true, true, true, false, true, false) > x.Health * op) //DFG+E+W+Q
-                {
-                    if (HasMana(true, true, true, false))
-                    {
-                        BestCombo = "|DFG|E+W+Q";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, true, true, false, true, false) > x.Health * op) //DFG+E+W
-                {
-                    if (HasMana(false, true, true, false))
-                    {
-                        BestCombo = "|DFG|E+W";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, false, false, false, true, false) > x.Health * op) //DFG+Q
-                {
-                    if (HasMana(true, false, false, false))
-                    {
-                        BestCombo = "|DFG|Q";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, false, true, false, false, true) > x.Health * op) //E+Q+IGN
+                if (GetComboDamage(x, Source, true, false, true, false, true) > x.Health * op) //E+Q+IGN
                 {
                     if (HasMana(true, false, true, false))
                     {
                         BestCombo = "E+Q+IGN";
                     }
                 }
-                else if (GetComboDamage(x, Source, false, true, true, false, false, true) > x.Health * op) //E+W+IGN
+                else if (GetComboDamage(x, Source, false, true, true, false, true) > x.Health * op) //E+W+IGN
                 {
                     if (HasMana(false, true, true, false))
                     {
                         BestCombo = "E+W+IGN";
                     }
                 }
-                else if (GetComboDamage(x, Source, true, true, true, false, false, true) > x.Health * op) //E+W+Q+IGN
+                else if (GetComboDamage(x, Source, true, true, true, false, true) > x.Health * op) //E+W+Q+IGN
                 {
                     if (HasMana(true, true, true, false))
                     {
                         BestCombo = "E+W+Q+IGN";
                     }
                 }
-                else if (GetComboDamage(x, Source, true, false, true, false, true, true) > x.Health * op) //DFG+E+Q+IGN
-                {
-                    if (HasMana(true, false, true, false))
-                    {
-                        BestCombo = "|DFG|E+Q+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, true, true, false, true, true) > x.Health * op) //DFG+E+W+IGN
-                {
-                    if (HasMana(false, true, true, false))
-                    {
-                        BestCombo = "|DFG|E+W+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, false, true, true) > x.Health * op) //DFG+E+W+Q+IGN
-                {
-                    if (HasMana(true, true, true, false))
-                    {
-                        BestCombo = "|DFG|E+W+Q+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, true, false, true) > x.Health * op) //E+W+R+Q+IGN
+                else if (GetComboDamage(x, Source, true, true, true, true, true) > x.Health * op) //E+W+R+Q+IGN
                 {
                     if (HasMana(true, true, true, true))
                     {
                         BestCombo = "E+W+R+Q+IGN";
                     }
                 }
-                else if (GetComboDamage(x, Source, true, true, true, true, true, true) > x.Health * op) //DFG+E+W+R+Q+IGN
-                {
-                    if (HasMana(true, true, true, true))
-                    {
-                        BestCombo = "|DFG|E+W+R+Q+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, false, false, false, false, true) > x.Health * op)  //IGN
+                else if (GetComboDamage(x, Source, false, false, false, false, true) > x.Health * op)  //IGN
                 {
                     if (HasMana(false, false, false, false))
                     {
                         BestCombo = "IGN";
                     }
                 }
-                else if (GetComboDamage(x, Source, false, true, true, true, false, false) > x.Health * op) //E+W+R
+                else if (GetComboDamage(x, Source, false, true, true, true, false) > x.Health * op) //E+W+R
                 {
                     if (HasMana(false, true, true, true))
                     {
                         BestCombo = "E+W+R";
                     }
                 }
-                else if (GetComboDamage(x, Source, true, true, true, true, false, false) > x.Health * op) //E+W+R+Q
+                else if (GetComboDamage(x, Source, true, true, true, true, false) > x.Health * op) //E+W+R+Q
                 {
                     if (HasMana(true, true, true, true))
                     {
                         BestCombo = "E+W+R+Q";
                     }
                 }
-                else if (GetComboDamage(x, Source, false, false, true, true, false, false) > x.Health * op) //E+R
+                else if (GetComboDamage(x, Source, false, false, true, true, false) > x.Health * op) //E+R
                 {
                     if (HasMana(false, false, true, true))
                     {
                         BestCombo = "E+R";
                     }
                 }
-                else if (GetComboDamage(x, Source, false, false, false, true, false, false) > x.Health * op) //R
+                else if (GetComboDamage(x, Source, false, false, false, true, false) > x.Health * op) //R
                 {
                     if (HasMana(false, false, false, true))
                     {
                         BestCombo = "R";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, false, true, true, true, false) > x.Health * op) //DFG+E+R+Q
-                {
-                    if (HasMana(true, false, true, true))
-                    {
-                        BestCombo = "|DFG|E+R+Q";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, true, true, true, true, false) > x.Health * op) //DFG+E+W+R
-                {
-                    if (HasMana(false, true, true, true))
-                    {
-                        BestCombo = "|DFG|E+W+R";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, true, true, false) > x.Health * op) //DFG+E+W+R+Q
-                {
-                    if (HasMana(true, true, true, true))
-                    {
-                        BestCombo = "|DFG|E+W+R+Q";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, false, false, true, true, false) > x.Health * op) //DFG+R
-                {
-                    if (HasMana(false, false, false, true))
-                    {
-                        BestCombo = "|DFG|R";
-                    }
-                }
-            }
-            else if (menu.Item("Priority").GetValue<StringList>().SelectedIndex == 2)
-            {
-                if (GetComboDamage(x, Source, true, false, true, false, false, true) > x.Health * op) //E+Q+IGN
-                {
-                    if (HasMana(true, false, true, false))
-                    {
-                        BestCombo = "E+Q+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, true, true, false, false, true) > x.Health * op) //E+W+IGN
-                {
-                    if (HasMana(false, true, true, false))
-                    {
-                        BestCombo = "E+W+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, false, false, true) > x.Health * op) //E+W+Q+IGN
-                {
-                    if (HasMana(true, true, true, false))
-                    {
-                        BestCombo = "E+W+Q+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, false, false, false, false, true) > x.Health * op)  //IGN
-                {
-                    if (HasMana(false, false, false, false))
-                    {
-                        BestCombo = "IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, false, true, false) > x.Health * op) //DFG+E+W+Q
-                {
-                    if (HasMana(true, true, true, false))
-                    {
-                        BestCombo = "|DFG|E+W+Q";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, true, true, false, true, false) > x.Health * op) //DFG+E+W
-                {
-                    if (HasMana(false, true, true, false))
-                    {
-                        BestCombo = "|DFG|E+W";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, false, false, false, true, false) > x.Health * op) //DFG+Q
-                {
-                    if (HasMana(true, false, false, false))
-                    {
-                        BestCombo = "|DFG|Q";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, false, true, false, true, true) > x.Health * op) //DFG+E+Q+IGN
-                {
-                    if (HasMana(true, false, true, false))
-                    {
-                        BestCombo = "|DFG|E+Q+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, true, true, false, true, true) > x.Health * op) //DFG+E+W+IGN
-                {
-                    if (HasMana(false, true, true, false))
-                    {
-                        BestCombo = "|DFG|E+W+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, false, true, true) > x.Health * op) //DFG+E+W+Q+IGN
-                {
-                    if (HasMana(true, true, true, false))
-                    {
-                        BestCombo = "|DFG|E+W+Q+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, true, true, true) > x.Health * op) //DFG+E+W+R+Q+IGN
-                {
-                    if (HasMana(true, true, true, true))
-                    {
-                        BestCombo = "|DFG|E+W+R+Q+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, true, false, true) > x.Health * op) //E+W+R+Q+IGN
-                {
-                    if (HasMana(true, true, true, true))
-                    {
-                        BestCombo = "E+W+R+Q+IGN";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, true, true, true, false, false) > x.Health * op) //E+W+R
-                {
-                    if (HasMana(false, true, true, true))
-                    {
-                        BestCombo = "E+W+R";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, true, false, false) > x.Health * op) //E+W+R+Q
-                {
-                    if (HasMana(true, true, true, true))
-                    {
-                        BestCombo = "E+W+R+Q";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, false, true, true, false, false) > x.Health * op) //E+R
-                {
-                    if (HasMana(false, false, true, true))
-                    {
-                        BestCombo = "E+R";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, false, false, true, false, false) > x.Health * op) //R
-                {
-                    if (HasMana(false, false, false, true))
-                    {
-                        BestCombo = "R";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, false, true, true, true, false) > x.Health * op) //DFG+E+R+Q
-                {
-                    if (HasMana(true, false, true, true))
-                    {
-                        BestCombo = "|DFG|E+R+Q";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, true, true, true, true, false) > x.Health * op) //DFG+E+W+R
-                {
-                    if (HasMana(false, true, true, true))
-                    {
-                        BestCombo = "|DFG|E+W+R";
-                    }
-                }
-                else if (GetComboDamage(x, Source, true, true, true, true, true, false) > x.Health * op) //DFG+E+W+R+Q
-                {
-                    if (HasMana(true, true, true, true))
-                    {
-                        BestCombo = "|DFG|E+W+R+Q";
-                    }
-                }
-                else if (GetComboDamage(x, Source, false, false, false, true, true, false) > x.Health * op) //DFG+R
-                {
-                    if (HasMana(false, false, false, true))
-                    {
-                        BestCombo = "|DFG|R";
                     }
                 }
             }
@@ -1805,7 +1470,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         }
 
         //        //Calculates the damage from selected abilities
-        private static float GetComboDamage(Obj_AI_Base enemy, string source, bool A, bool B, bool C, bool D, bool EE, bool F)
+        private static float GetComboDamage(Obj_AI_Base enemy, string source, bool A, bool B, bool C, bool D, bool F)
         {
             double damage = 0d;
             double cmana = 0d;
@@ -1864,21 +1529,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 {
                     if (cmana <= Player.Mana) damage += Player.GetSpellDamage(enemy, SpellSlot.Q);
                     else cmana -= Player.Spellbook.GetSpell(SpellSlot.Q).ManaCost;
-                }
-            }
-
-            if (Dfg.IsReady() && EE)
-            {
-                if (source == "Comboing" || source == "KS" || source == "Table")
-                {
-                    if (!C)
-                        damage = (damage * 1.2) + Player.GetItemDamage(enemy, Damage.DamageItems.Dfg);
-                    else if (E.IsReady())
-                        damage = (damage * 1.2) + Player.GetItemDamage(enemy, Damage.DamageItems.Dfg);
-                }
-                else
-                {
-                    damage = (damage * 1.2) + Player.GetItemDamage(enemy, Damage.DamageItems.Dfg);
                 }
             }
 
@@ -1977,77 +1627,77 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             return Tuple.Create(end, EndValue);
         }
 
-        //Check if needed abilities are ready
-        public static bool UpCD(bool A, bool B, bool C, bool D, bool EEE, bool F)
-        {
-            bool AR = Q.IsReady();
-            bool BR = W.IsReady();
-            bool CR = E.IsReady();
-            bool DR = R.IsReady();
-            bool ER = Dfg.IsReady();
-            bool FR = IgniteSlot != SpellSlot.Unknown && Player.Spellbook.CanUseSpell(IgniteSlot) == SpellState.Ready;
+        ////Check if needed abilities are ready
+        //public static bool UpCD(bool A, bool B, bool C, bool D, bool EEE, bool F)
+        //{
+        //    bool AR = Q.IsReady();
+        //    bool BR = W.IsReady();
+        //    bool CR = E.IsReady();
+        //    bool DR = R.IsReady();
+        //    bool ER = Dfg.IsReady();
+        //    bool FR = IgniteSlot != SpellSlot.Unknown && Player.Spellbook.CanUseSpell(IgniteSlot) == SpellState.Ready;
 
-            if (A && !AR && Q.Level > 0)
-            {
-                return false;
-            }
-            else if (B && !BR && W.Level > 0)
-            {
-                return false;
-            }
-            else if (C && !CR && E.Level > 0)
-            {
-                return false;
-            }
-            else if (D && !DR && R.Level > 0)
-            {
-                return false;
-            }
-            else if (EEE && !ER && IgniteSlot == SpellSlot.Unknown)
-            {
-                return false;
-            }
-            else if (F && !FR && DFGSlot == SpellSlot.Unknown)
-            {
-                return false;
-            }
-            return true;
-        }
+        //    if (A && !AR && Q.Level > 0)
+        //    {
+        //        return false;
+        //    }
+        //    else if (B && !BR && W.Level > 0)
+        //    {
+        //        return false;
+        //    }
+        //    else if (C && !CR && E.Level > 0)
+        //    {
+        //        return false;
+        //    }
+        //    else if (D && !DR && R.Level > 0)
+        //    {
+        //        return false;
+        //    }
+        //    else if (EEE && !ER && IgniteSlot == SpellSlot.Unknown)
+        //    {
+        //        return false;
+        //    }
+        //    else if (F && !FR && DFGSlot == SpellSlot.Unknown)
+        //    {
+        //        return false;
+        //    }
+        //    return true;
+        //}
 
-        //Calculates the biggest needed cooldown for performing combo
-        public static double UpCDD(bool A, bool B, bool C, bool D, bool EEE, bool F)
-        {
-            bool AR = Q.IsReady();
-            bool BR = W.IsReady();
-            bool CR = E.IsReady();
-            bool DR = R.IsReady();
-            bool ER = Dfg.IsReady();
-            bool FR = IgniteSlot != SpellSlot.Unknown && Player.Spellbook.CanUseSpell(IgniteSlot) == SpellState.Ready;
+        ////Calculates the biggest needed cooldown for performing combo
+        //public static double UpCDD(bool A, bool B, bool C, bool D, bool EEE, bool F)
+        //{
+        //    bool AR = Q.IsReady();
+        //    bool BR = W.IsReady();
+        //    bool CR = E.IsReady();
+        //    bool DR = R.IsReady();
+        //    bool ER = Dfg.IsReady();
+        //    bool FR = IgniteSlot != SpellSlot.Unknown && Player.Spellbook.CanUseSpell(IgniteSlot) == SpellState.Ready;
 
-            double timeleft = 0f;
-            if (A && !AR)
-                if ((Math.Round(Q.Instance.CooldownExpires - Game.Time)) > timeleft)
-                    timeleft = Math.Round(Q.Instance.CooldownExpires - Game.Time);
-            if (B && !BR)
-                if ((Math.Round(W.Instance.CooldownExpires - Game.Time)) > timeleft)
-                    timeleft = Math.Round(W.Instance.CooldownExpires - Game.Time);
-            if (C && !CR)
-                if ((Math.Round(E.Instance.CooldownExpires - Game.Time)) > timeleft)
-                    timeleft = Math.Round(E.Instance.CooldownExpires - Game.Time);
-            if (D && !DR)
-                if ((Math.Round(R.Instance.CooldownExpires - Game.Time)) > timeleft)
-                    timeleft = (Math.Round(R.Instance.CooldownExpires - Game.Time));
-            if (EEE && !ER)
-                if (Math.Round((ObjectManager.Player.Spellbook.GetSpell(DFGSlot).CooldownExpires - Game.Time)) > timeleft)
-                    timeleft = Math.Round((ObjectManager.Player.Spellbook.GetSpell(DFGSlot).CooldownExpires - Game.Time));
-            if (F && !FR)
-                if (Math.Round((ObjectManager.Player.Spellbook.GetSpell(IgniteSlot).CooldownExpires - Game.Time)) > timeleft)
-                    timeleft = Math.Round((ObjectManager.Player.Spellbook.GetSpell(IgniteSlot).CooldownExpires - Game.Time));
-            return Math.Round(timeleft);
-        }
+        //    double timeleft = 0f;
+        //    if (A && !AR)
+        //        if ((Math.Round(Q.Instance.CooldownExpires - Game.Time)) > timeleft)
+        //            timeleft = Math.Round(Q.Instance.CooldownExpires - Game.Time);
+        //    if (B && !BR)
+        //        if ((Math.Round(W.Instance.CooldownExpires - Game.Time)) > timeleft)
+        //            timeleft = Math.Round(W.Instance.CooldownExpires - Game.Time);
+        //    if (C && !CR)
+        //        if ((Math.Round(E.Instance.CooldownExpires - Game.Time)) > timeleft)
+        //            timeleft = Math.Round(E.Instance.CooldownExpires - Game.Time);
+        //    if (D && !DR)
+        //        if ((Math.Round(R.Instance.CooldownExpires - Game.Time)) > timeleft)
+        //            timeleft = (Math.Round(R.Instance.CooldownExpires - Game.Time));
+        //    if (EEE && !ER)
+        //        if (Math.Round((ObjectManager.Player.Spellbook.GetSpell(DFGSlot).CooldownExpires - Game.Time)) > timeleft)
+        //            timeleft = Math.Round((ObjectManager.Player.Spellbook.GetSpell(DFGSlot).CooldownExpires - Game.Time));
+        //    if (F && !FR)
+        //        if (Math.Round((ObjectManager.Player.Spellbook.GetSpell(IgniteSlot).CooldownExpires - Game.Time)) > timeleft)
+        //            timeleft = Math.Round((ObjectManager.Player.Spellbook.GetSpell(IgniteSlot).CooldownExpires - Game.Time));
+        //    return Math.Round(timeleft);
+        //}
 
         //Checks if needed abilities are leveled up/exist
-        public static bool Exists(bool A, bool B, bool C, bool D, bool EE, bool F)
+        public static bool Exists(bool A, bool B, bool C, bool D, bool F)
         {
             int x = 0;
 
@@ -2058,8 +1708,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             if (C && E.Level == 0)
                 x++;
             if (D && R.Level == 0)
-                x++;
-            if (EE && DFGSlot == SpellSlot.Unknown)
                 x++;
             if (F && IgniteSlot == SpellSlot.Unknown)
                 x++;
@@ -2118,7 +1766,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         //Returns how much more damage you need to deal to the target to ensure the kill OR how much you will overdamage to them
         private static Tuple<int, string> GetExtraNeeded(Obj_AI_Hero target)
         {
-            var combodamage = GetComboDamage(target, "Cunts", true, true, true, true, true, true);
+            var combodamage = GetComboDamage(target, "Cunts", true, true, true, true, true);
             float Damage = 0f;
             int OutPut = 0;
             string Text = null;
