@@ -9,7 +9,6 @@ using System.Threading;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
-using xSLx_Orbwalker;
 using Veigar__The_Tiny_Master_Of_Evil.Properties;
 //using KeMinimap;
 #endregion
@@ -240,9 +239,8 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.AddSubMenu(targetSelectorMenu);
 
             //Orbwalker
-            orbwalkerMenu.AddItem(new MenuItem("Orbwalker_Mode", "Regular Orbwalker").SetValue(false));
             menu.AddSubMenu(orbwalkerMenu);
-            chooseOrbwalker(menu.Item("Orbwalker_Mode").GetValue<bool>());
+            chooseOrbwalker(true);
 
             //Keys & Combo Related
             menu.AddSubMenu(new Menu("Keys", "Keys"));
@@ -384,7 +382,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             Game.OnWndProc += Game_OnWndProc;
             GameObject.OnCreate += TowerAttackOnCreate;
             Drawing.OnDraw += Drawing_OnDraw;
-            Interrupter.OnPossibleToInterrupt += Interrupter_OnPosibleToInterrupt;
+            Interrupter2.OnInterruptableTarget += Interrupter_OnPosibleToInterrupt;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Game.PrintChat("Veigar, The Tiny Master Of Evil Loaded! Made by DedToto");
         }
@@ -493,7 +491,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                             }
                         }
                     }
-                    if (Player.ServerPosition.Distance(Game.CursorPos) > 80) Player.IssueOrder(GameObjectOrder.MoveTo, point);
+                    if (menu.Item("ToOrb").GetValue<bool>()) if (Player.ServerPosition.Distance(Game.CursorPos) > 80) Player.IssueOrder(GameObjectOrder.MoveTo, point);
                 }
             }
             else
@@ -1962,12 +1960,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 Orb = 1;
                 Game.PrintChat("Regular Orbwalker Loaded");
             }
-            else
-            {
-                xSLxOrbwalker.AddToMenu(orbwalkerMenu);
-                Orb = 2;
-                Game.PrintChat("xSLx Orbwalker Loaded");
-            }
         }
 
         //private static void GenModelPacket(string champ, int skinId)
@@ -2026,7 +2018,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         }
 
         //Interrupts Dangerous enemy spells with E
-        private static void Interrupter_OnPosibleToInterrupt(Obj_AI_Base unit, InterruptableSpell spell)
+        private static void Interrupter_OnPosibleToInterrupt(Obj_AI_Hero unit, Interrupter2.InterruptableTargetEventArgs spell)
         {
             if (!menu.Item("UseInt").GetValue<bool>()) return;
 
