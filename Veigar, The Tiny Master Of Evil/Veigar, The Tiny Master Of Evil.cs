@@ -952,7 +952,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         //Use All Available Spells Combo(Independent of CD and target HP)
         private static void AllIn()
         {
-            if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) xSLx_Orbwalker.xSLxOrbwalker.Orbwalk(Game.CursorPos, Target); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
+            if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) Orbwalking.Orbwalk(Target, Game.CursorPos); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
             UseSpells(Target, "AllIn", true, true, true, true, true);
         }
 
