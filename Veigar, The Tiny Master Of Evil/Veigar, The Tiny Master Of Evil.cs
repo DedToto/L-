@@ -196,7 +196,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             sprite.VisibleCondition += s => Render.OnScreen(Drawing.WorldToScreen(Player.Position)) && menu.Item("Show").GetValue<bool>();
             sprite.Scale = new Vector2(1f, 1f);
             sprite.Add();
-            Game.OnGameUpdate += eventArgs =>
+            Game.OnUpdate += eventArgs =>
             {
                 if (sprite != null && Game.ClockTime >= 50)
                 {
@@ -379,7 +379,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             GameObject.OnCreate += OnCreate;
             GameObject.OnDelete += OnDelete;
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
-            Game.OnGameUpdate += Game_OnGameUpdate;
+            Game.OnUpdate += Game_OnGameUpdate;
             Game.OnWndProc += Game_OnWndProc;
             GameObject.OnCreate += TowerAttackOnCreate;
             Drawing.OnDraw += Drawing_OnDraw;
