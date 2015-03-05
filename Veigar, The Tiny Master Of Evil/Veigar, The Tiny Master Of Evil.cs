@@ -191,6 +191,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
 
         private static void Main(string[] args)
         {
+            //potato
             CustomEvents.Game.OnGameLoad += Game_OnGameLoad;
             var sprite = new Render.Sprite(Properties.Resources.Sprite, new Vector2(Drawing.Width * 0.83f, Drawing.Height * 0.33f));
             sprite.VisibleCondition += s => Render.OnScreen(Drawing.WorldToScreen(Player.Position)) && menu.Item("Show").GetValue<bool>();
