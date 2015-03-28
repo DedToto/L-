@@ -268,9 +268,10 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             foreach (var hud in HUDlist.Where(hud => hud.MenuText == "Display KS Status" || hud.MenuText == "Display Stun Closest Status" || hud.MenuText == "Display LaneClear Status"))
                 menu.SubMenu("Drawings").SubMenu("HUD Settings").AddItem(new MenuItem("U" + hud.MenuText, hud.MenuText).SetValue(false));
 
-            menu.SubMenu("Drawings").AddItem(new MenuItem("QRange", "Q,R range").SetValue(new Circle(true, Color.FromArgb(255, 0, 255, 0))));
+            menu.SubMenu("Drawings").AddItem(new MenuItem("QRange", "Q range").SetValue(new Circle(true, Color.FromArgb(255, 0, 255, 0))));
             menu.SubMenu("Drawings").AddItem(new MenuItem("WRange", "W range").SetValue(new Circle(false, Color.FromArgb(100, 255, 0, 255))));
             menu.SubMenu("Drawings").AddItem(new MenuItem("ERange", "E range").SetValue(new Circle(true, Color.FromArgb(255, 255, 0, 255))));
+            menu.SubMenu("Drawings").AddItem(new MenuItem("RRange", "R range").SetValue(new Circle(true, Color.FromArgb(255, 0, 255, 0))));
             menu.SubMenu("Drawings").AddItem(new MenuItem("MinionMarker", "Mark Q Farm Minions").SetValue(new Circle(true, Color.Green)));
             menu.SubMenu("Drawings").AddItem(new MenuItem("TText", "Mark Targets with Circles").SetValue(true));
             menu.SubMenu("Drawings").AddItem(new MenuItem("LText", "Display Locked Target[HP BAR]").SetValue(true));
@@ -315,8 +316,8 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             //Farm menu:
             menu.AddSubMenu(new Menu("Farm", "Farm"));
             menu.SubMenu("Farm").AddItem(new MenuItem("dontfarm", "Disable Q farm when using any combos").SetValue(true));
-            menu.SubMenu("Farm").AddItem(new MenuItem("OnlySiege", "Last hit only siege creeps").SetValue(false));
             menu.SubMenu("Farm").AddItem(new MenuItem("WAmount", "Min Minions To Land W").SetValue(new Slider(3, 1, 7)));
+            menu.SubMenu("Farm").AddItem(new MenuItem("FarmModeF", "Q Farm Mode").SetValue(new StringList(new[] { "Always", "2 Creeps", "Mixed", "Only Siege" }, 0)));
             menu.SubMenu("Farm").AddItem(new MenuItem("FarmMove", "Move To mouse").SetValue(new StringList(new[] { "Never", "Lane Clear", "Q farm", "Lane Clear & Q farm" }, 0)));
 
             //Jungle Farm menu:
@@ -558,15 +559,64 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 if (Player.Mana / Player.MaxMana * 100 < menu.Item("qusage").GetValue<Slider>().Value) return;
                 if (menu.Item("SaveE").GetValue<bool>() && !HasMana(false, false, true, false)) return;
                 if (menu.Item("AllInActive").GetValue<KeyBind>().Active || menu.Item("Stun Closest Enemy").GetValue<KeyBind>().Active || menu.Item("HarassActive").GetValue<KeyBind>().Active || menu.Item("Combo").GetValue<KeyBind>().Active && menu.Item("dontfarm").GetValue<bool>()) return;
-                if (menu.Item("OnlySiege").GetValue<bool>())
-                {
-                    _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.BaseSkinName.Contains("Siege") && m.Health < ((Player.GetSpellDamage(m, SpellSlot.Q))) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
-                }
-                else
+
+                if (menu.Item("FarmModeF").GetValue<StringList>().SelectedIndex == 0)
                 {
                     _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < ((Player.GetSpellDamage(m, SpellSlot.Q))) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
+                    if (!Orbwalking.CanMove(40)) return;
+                    if (Q.IsReady())
+                    {
+                        if (_m != null)
+                            CastQ(_m);
+                    }
                 }
-                lastHit();
+                else if (menu.Item("FarmModeF").GetValue<StringList>().SelectedIndex == 1)
+                {
+                    if (!Orbwalking.CanMove(40)) return;
+                    if (Q.IsReady())
+                    {
+                        var lowHealtMinis = ObjectManager.Get<Obj_AI_Base>().Where(mini => mini.IsMinion && mini.IsEnemy && Player.Distance(mini.Position) <= 850 && mini.Health < ((Player.GetSpellDamage(mini, SpellSlot.Q))) && HealthPrediction.GetHealthPrediction(mini, (int)(Player.Distance(mini, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
+                        var bestPosition = Q.GetLineFarmLocation(lowHealtMinis.ToList()); //Get the location of the highest hit
+                        if (bestPosition.Position.IsValid())
+                        {
+                            if (bestPosition.MinionsHit >= 2)
+                            {
+                                Q.Cast(bestPosition.Position, false);
+                            }
+                        }
+                    }
+                }
+                else if (menu.Item("FarmModeF").GetValue<StringList>().SelectedIndex == 2)
+                {
+                    _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < ((Player.GetSpellDamage(m, SpellSlot.Q))) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
+                    if (!Orbwalking.CanMove(40)) return;
+                    if (Q.IsReady())
+                    {
+                        var lowHealtMinis = ObjectManager.Get<Obj_AI_Base>().Where(mini => mini.IsMinion && mini.IsEnemy && Player.Distance(mini.Position) <= 850 && mini.Health < ((Player.GetSpellDamage(mini, SpellSlot.Q))) && HealthPrediction.GetHealthPrediction(mini, (int)(Player.Distance(mini, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
+                        var bestPosition = Q.GetLineFarmLocation(lowHealtMinis.ToList()); //Get the location of the highest hit
+                        if (bestPosition.Position.IsValid())
+                        {
+                            if (bestPosition.MinionsHit >= 2)
+                            {
+                                Q.Cast(bestPosition.Position, false);
+                            }
+                        }
+                        else if (_m != null)
+                        {
+                            CastQ(_m);
+                        }
+                    }
+                }
+                else if (menu.Item("FarmModeF").GetValue<StringList>().SelectedIndex == 3)
+                {
+                    if (!Orbwalking.CanMove(40)) return;
+                    if (Q.IsReady())
+                    {
+                        if (_m != null)
+                            CastQ(_m);
+                    }
+                }
+
                 if (menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 2 || menu.Item("FarmMove").GetValue<StringList>().SelectedIndex == 3) if (Player.ServerPosition.Distance(Game.CursorPos) > 55) Player.IssueOrder(GameObjectOrder.MoveTo, point);
             }
 
@@ -1471,17 +1521,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                 {
                     W.Cast(ePos2, Packets());
                 }
-            }
-        }
-
-        //Q last Hitting
-        public static void lastHit()
-        {
-            if (!Orbwalking.CanMove(40)) return;
-            if (Q.IsReady())
-            {
-                if (_m != null)
-                    CastQ(_m);
             }
         }
 
