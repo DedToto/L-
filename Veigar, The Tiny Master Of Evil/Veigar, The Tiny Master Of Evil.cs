@@ -317,7 +317,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             menu.AddSubMenu(new Menu("Farm", "Farm"));
             menu.SubMenu("Farm").AddItem(new MenuItem("dontfarm", "Disable Q farm when using any combos").SetValue(true));
             menu.SubMenu("Farm").AddItem(new MenuItem("WAmount", "Min Minions To Land W").SetValue(new Slider(3, 1, 7)));
-            menu.SubMenu("Farm").AddItem(new MenuItem("FarmModeF", "Q Farm Mode").SetValue(new StringList(new[] { "Always", "2 Creeps", "Mixed", "Only Siege" }, 0)));
+            menu.SubMenu("Farm").AddItem(new MenuItem("FarmModeF", "Q Farm Mode").SetValue(new StringList(new[] { "Always", "2 Creeps", "Only Siege" }, 0)));
             menu.SubMenu("Farm").AddItem(new MenuItem("FarmMove", "Move To mouse").SetValue(new StringList(new[] { "Never", "Lane Clear", "Q farm", "Lane Clear & Q farm" }, 0)));
 
             //Jungle Farm menu:
@@ -566,8 +566,19 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     if (!Orbwalking.CanMove(40)) return;
                     if (Q.IsReady())
                     {
-                        if (_m != null)
+                        var lowHealtMinis = ObjectManager.Get<Obj_AI_Base>().Where(mini => mini.IsMinion && mini.IsEnemy && Player.Distance(mini.Position) <= 850 && mini.Health < ((Player.GetSpellDamage(mini, SpellSlot.Q))) && HealthPrediction.GetHealthPrediction(mini, (int)(Player.Distance(mini, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
+                        var bestPosition = Q.GetLineFarmLocation(lowHealtMinis.ToList()); //Get the location of the highest hit
+                        if (bestPosition.Position.IsValid())
+                        {
+                            if (bestPosition.MinionsHit >= 2)
+                            {
+                                Q.Cast(bestPosition.Position, false);
+                            }
+                        }
+                        else if (_m != null)
+                        {
                             CastQ(_m);
+                        }
                     }
                 }
                 else if (menu.Item("FarmModeF").GetValue<StringList>().SelectedIndex == 1)
@@ -587,27 +598,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
                     }
                 }
                 else if (menu.Item("FarmModeF").GetValue<StringList>().SelectedIndex == 2)
-                {
-                    _m = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.MaxHealth).FirstOrDefault(m => m.Health < ((Player.GetSpellDamage(m, SpellSlot.Q))) && HealthPrediction.GetHealthPrediction(m, (int)(Player.Distance(m, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
-                    if (!Orbwalking.CanMove(40)) return;
-                    if (Q.IsReady())
-                    {
-                        var lowHealtMinis = ObjectManager.Get<Obj_AI_Base>().Where(mini => mini.IsMinion && mini.IsEnemy && Player.Distance(mini.Position) <= 850 && mini.Health < ((Player.GetSpellDamage(mini, SpellSlot.Q))) && HealthPrediction.GetHealthPrediction(mini, (int)(Player.Distance(mini, false) / Q.Speed), (int)(Q.Delay * 1000 + Game.Ping / 2)) > 0);
-                        var bestPosition = Q.GetLineFarmLocation(lowHealtMinis.ToList()); //Get the location of the highest hit
-                        if (bestPosition.Position.IsValid())
-                        {
-                            if (bestPosition.MinionsHit >= 2)
-                            {
-                                Q.Cast(bestPosition.Position, false);
-                            }
-                        }
-                        else if (_m != null)
-                        {
-                            CastQ(_m);
-                        }
-                    }
-                }
-                else if (menu.Item("FarmModeF").GetValue<StringList>().SelectedIndex == 3)
                 {
                     if (!Orbwalking.CanMove(40)) return;
                     if (Q.IsReady())
