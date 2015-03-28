@@ -27,7 +27,6 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         private static Obj_AI_Hero WimmTarget = null;
         private static Obj_AI_Hero WimmTargett = null;
         //private static Int32 LastSkin;
-        public static int Orb = 0;
         public static int ComboStarted = 0;
         public static float Delay = 0f;
         public static float Delay1 = 0f;
@@ -985,6 +984,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         //Harass Combo(Independent of CD and target HP)
         private static void Harass()
         {
+            if (menu.Item("ToOrb").GetValue<bool>()) Orbwalking.Orbwalk(Target, Game.CursorPos);
             if (menu.Item("HarassMode").GetValue<StringList>().SelectedIndex == 0) UseSpells(Target, "EWQHarass", true, true, true, false, false);
             else if (menu.Item("HarassMode").GetValue<StringList>().SelectedIndex == 1) UseSpells(Target, "EWHarass", false, true, true, false, false);
             else if (menu.Item("HarassMode").GetValue<StringList>().SelectedIndex == 2) UseSpells(Target, "QHarass", true, false, false, false, false);
@@ -993,7 +993,7 @@ namespace Veigar__The_Tiny_Master_Of_Evil
         //Use All Available Spells Combo(Independent of CD and target HP)
         private static void AllIn()
         {
-            if (menu.Item("ToOrb").GetValue<bool>()) if (Orb == 2) Orbwalking.Orbwalk(Target, Game.CursorPos); else if (Orb == 1) Orbwalking.Orbwalk(Target, Game.CursorPos);
+            if (menu.Item("ToOrb").GetValue<bool>()) Orbwalking.Orbwalk(Target, Game.CursorPos);
             UseSpells(Target, "AllIn", true, true, true, true, true);
         }
 
@@ -2012,13 +2012,12 @@ namespace Veigar__The_Tiny_Master_Of_Evil
             }
         }
 
-        //Loads standart or xSLx Orbwalker
+        //Loads Orbwalker
         private static void chooseOrbwalker(bool mode)
         {
             if (mode)
             {
                 Orbwalker = new Orbwalking.Orbwalker(orbwalkerMenu);
-                Orb = 1;
                 Game.PrintChat("Regular Orbwalker Loaded");
             }
         }
