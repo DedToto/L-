@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Veigar, The Tiny Master Of Evil")]
+[assembly: AssemblyTitle("Veigar TTMOE")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("DNA Project")]
-[assembly: AssemblyProduct("Veigar, The Tiny Master Of Evil")]
+[assembly: AssemblyProduct("Veigar TTMOE")]
 [assembly: AssemblyCopyright("Copyright © DNA Project 2014")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
