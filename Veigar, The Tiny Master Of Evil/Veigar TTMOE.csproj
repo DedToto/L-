@@ -7,7 +7,7 @@
     <ProjectGuid>{9C7EBFC5-7034-4907-9262-1A9D7B2823AD}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Veigar__The_Tiny_Master_Of_Evil</RootNamespace>
+    <RootNamespace>Veigar__TTMOE</RootNamespace>
     <AssemblyName>Veigar, The Tiny Master Of Evil</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

@@ -9,11 +9,11 @@ using System.Threading;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
-using Veigar__The_Tiny_Master_Of_Evil.Properties;
+using Veigar__TTMOE.Properties;
 //using KeMinimap;
 #endregion
 
-namespace Veigar__The_Tiny_Master_Of_Evil
+namespace Veigar__TTMOE
 {
     class Program
     {

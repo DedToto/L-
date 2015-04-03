@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Veigar__The_Tiny_Master_Of_Evil
+namespace Veigar__TTMOE
 {
     internal class HUD
     {
