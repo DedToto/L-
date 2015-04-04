@@ -9,10 +9,10 @@ using System.Threading;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
-using Veigar__TTMOE.Properties;
+using Veigar__The_Tiny_Master_Of_Evil.Properties;
 //using KeMinimap;
 #endregion
-//
+
 namespace Veigar__TTMOE
 {
     class Program
@@ -214,14 +214,14 @@ namespace Veigar__TTMOE
             if (Player.BaseSkinName != ChampionName) return;
 
             //Initializing Spells
-            Q = new Spell(SpellSlot.Q, 850);
+            Q = new Spell(SpellSlot.Q, 950);
             W = new Spell(SpellSlot.W, 900);
-            E = new Spell(SpellSlot.E, 1005);
+            E = new Spell(SpellSlot.E, 1050);
             R = new Spell(SpellSlot.R, 650);
 
-            Q.SetSkillshot(0.25f, 70f, 1200f, false, SkillshotType.SkillshotLine);
-            W.SetSkillshot(1.25f, 230f, float.MaxValue, false, SkillshotType.SkillshotCircle);
-            E.SetSkillshot(.2f, 330f, float.MaxValue, false, SkillshotType.SkillshotCircle);
+            Q.SetSkillshot(0.25f, 70f, 2000f, false, SkillshotType.SkillshotLine);
+            W.SetSkillshot(1.35f, 225f, float.MaxValue, false, SkillshotType.SkillshotCircle);
+            E.SetSkillshot(.5f, 350f, float.MaxValue, false, SkillshotType.SkillshotCircle);
 
             SpellList.Add(Q);
             SpellList.Add(W);
@@ -1084,7 +1084,8 @@ namespace Veigar__TTMOE
                 {
                     if (Player.Distance(T.Position) <= E.Range)
                     {
-                        if (E.IsReady() && !IsImmune(T) || !menu.Item("DontEShields").GetValue<bool>())
+                        var predd = E.GetPrediction(T);
+                        if (E.IsReady() && predd.Hitchance == HitChance.VeryHigh && !IsImmune(T) || !menu.Item("DontEShields").GetValue<bool>())
                         {
                             castE((Obj_AI_Hero)T);
                         }
@@ -1173,34 +1174,35 @@ namespace Veigar__TTMOE
 
             if (QQ && T != null && !HasBuffs(T) && DetectCollision(T, Q.Delay))
             {
+                var preddd = Q.GetPrediction(T);
                 if (Source == "NE" && menu.Item("ComboWaitMode").GetValue<StringList>().SelectedIndex == 0)
                 {
                     if (menu.Item("CastMode").GetValue<StringList>().SelectedIndex == 0)
                     {
                         if (menu.Item("IgnoreQ").GetValue<bool>() || !W.IsReady())
                         {
-                            CastQ(T);
+                            if (preddd.Hitchance == HitChance.VeryHigh) CastQ(T);
                         }
                     }
                     else
                     {
                         if (T.Buffs.Where(b => b.IsActive && Game.Time < b.EndTime && (b.Type == BuffType.Charm || b.Type == BuffType.Knockback || b.Type == BuffType.Stun || b.Type == BuffType.Suppression || b.Type == BuffType.Snare)).Aggregate(0f, (current, buff) => Math.Max(current, buff.EndTime)) - Game.Time >= W.Delay)
-                            CastQ(T);
+                            if (preddd.Hitchance == HitChance.VeryHigh) CastQ(T);
                     }
                 }
                 else if (Source != "EWQHarass" && Source != "QHarass")
                 {
-                    CastQ(T);
+                    if (preddd.Hitchance == HitChance.VeryHigh) CastQ(T);
                 }
                 else if (Source == "EWQHarass")
                 {
                     if (!menu.Item("WaitW").GetValue<bool>() || !W.IsReady())
-                        CastQ(T);
+                        if (preddd.Hitchance == HitChance.VeryHigh) CastQ(T);
                 }
                 else if (Source == "QHarass")
                 {
                     if (Player.Distance(T.Position) <= Q.Range)
-                        CastQ(T);
+                        if (preddd.Hitchance == HitChance.VeryHigh) CastQ(T);
                 }
 
             }
