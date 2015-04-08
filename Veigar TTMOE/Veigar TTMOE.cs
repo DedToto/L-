@@ -221,7 +221,7 @@ namespace Veigar__TTMOE
 
             Q.SetSkillshot(0.25f, 70f, 2000f, false, SkillshotType.SkillshotLine);
             W.SetSkillshot(1.35f, 225f, float.MaxValue, false, SkillshotType.SkillshotCircle);
-            E.SetSkillshot(.5f, 350f, float.MaxValue, false, SkillshotType.SkillshotCircle);
+            E.SetSkillshot(.8f, 350f, float.MaxValue, false, SkillshotType.SkillshotCircle);
 
             SpellList.Add(Q);
             SpellList.Add(W);
