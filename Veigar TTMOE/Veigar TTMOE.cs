@@ -927,7 +927,7 @@ namespace Veigar__TTMOE
                         UseSpells(enemy, "NE", false, true, false, false, false);
                     }
                 }
-                else if (GetComboDamage(enemy, "Cunts", true, false, false, false, false) > enemy.Health && menu.Item("UseQKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>())
+                else if (GetComboDamage(enemy, "Cunts", true, false, false, false, false) > enemy.Health && menu.Item("UseQKS").GetValue<bool>())
                 {
                     if (HasMana(true, false, false, false))
                     {
@@ -941,7 +941,7 @@ namespace Veigar__TTMOE
                         UseSpells(enemy, "Source", false, false, false, true, false);
                     }
                 }
-                else if (GetComboDamage(enemy, "Cunts", false, false, false, true, false) > enemy.Health && menu.Item("UseRKS").GetValue<bool>() && menu.Item("UseDFGKS").GetValue<bool>())
+                else if (GetComboDamage(enemy, "Cunts", false, false, false, true, false) > enemy.Health && menu.Item("UseRKS").GetValue<bool>())
                 {
                     if (HasMana(false, false, false, true))
                     {
@@ -1018,12 +1018,6 @@ namespace Veigar__TTMOE
                     UseSpells(Target, "NE", false, true, false, false, false);
                 else if (TheCombo == "E+W+Q" && HasMana(true, true, true, false)) //E+W+Q
                     UseSpells(Target, "NE", true, true, true, false, false);
-                else if (TheCombo == "|DFG|E+W+Q" && HasMana(true, true, true, false)) //DFG+E+W+Q
-                    UseSpells(Target, "NE", true, true, true, false, false);
-                else if (TheCombo == "|DFG|E+W" && HasMana(false, true, true, false)) //DFG+E+W
-                    UseSpells(Target, "NE", false, true, true, false, false);
-                else if (TheCombo == "|DFG|Q" && HasMana(true, false, false, false)) //DFG+Q
-                    UseSpells(Target, "N", true, false, false, false, false);
                 else if (TheCombo == "E+W+R" && HasMana(false, true, true, true)) //E+W+R
                     UseSpells(Target, "NE", false, true, true, true, false);
                 else if (TheCombo == "E+W+R+Q" && HasMana(true, true, true, true)) //E+W+R+Q
@@ -1032,14 +1026,6 @@ namespace Veigar__TTMOE
                     UseSpells(Target, "N", false, false, true, true, false);
                 else if (TheCombo == "R" && HasMana(false, false, false, true)) //R
                     UseSpells(Target, "N", false, false, false, true, false);
-                else if (TheCombo == "|DFG|E+R+Q" && HasMana(true, false, true, true)) //DFG+E+R+Q
-                    UseSpells(Target, "N", true, false, true, true, false);
-                else if (TheCombo == "|DFG|E+W+R" && HasMana(false, true, true, true)) //DFG+E+W+R
-                    UseSpells(Target, "NE", false, true, true, true, false);
-                else if (TheCombo == "|DFG|E+W+R+Q" && HasMana(true, true, true, true)) //DFG+E+W+R+Q
-                    UseSpells(Target, "NE", true, true, true, true, false);
-                else if (TheCombo == "|DFG|R" && HasMana(false, false, false, true)) //DFG+R
-                    UseSpells(Target, "N", false, false, false, true, false);
                 else if (TheCombo == "E+Q+IGN" && HasMana(true, false, true, false)) //E+Q+IGN
                     UseSpells(Target, "N", true, false, true, false, true);
                 else if (TheCombo == "E+W+IGN" && HasMana(false, true, true, false)) //E+W+IGN
@@ -1047,14 +1033,6 @@ namespace Veigar__TTMOE
                 else if (TheCombo == "E+W+Q+IGN" && HasMana(true, true, true, false)) //E+W+Q+IGN
                     UseSpells(Target, "NE", true, true, true, false, true);
                 else if (TheCombo == "E+W+R+Q+IGN" && HasMana(true, true, true, true)) //E+W+R+Q+IGN
-                    UseSpells(Target, "NE", true, true, true, true, true);
-                else if (TheCombo == "|DFG|E+Q+IGN" && HasMana(true, false, true, false)) //DFG+E+Q+IGN
-                    UseSpells(Target, "N", true, false, true, false, true);
-                else if (TheCombo == "|DFG|E+W+IGN" && HasMana(false, true, true, false)) //DFG+E+W+IGN
-                    UseSpells(Target, "NE", false, true, true, false, true);
-                else if (TheCombo == "|DFG|E+W+Q+IGN" && HasMana(true, true, true, false)) //DFG+E+W+Q+IGN
-                    UseSpells(Target, "NE", true, true, true, false, true);
-                else if (TheCombo == "|DFG|E+W+R+Q+IGN" && HasMana(true, true, true, true)) //DFG+E+W+R+Q+IGN
                     UseSpells(Target, "NE", true, true, true, true, true);
                 else if (TheCombo == "IGN" && HasMana(false, false, false, false)) //IGN
                     UseSpells(Target, "N", false, false, false, false, true);
